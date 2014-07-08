@@ -15,25 +15,19 @@ repmat = function(X,m,n){
   matrix(t(matrix(X,mx,nx*n)),mx*m,nx*n,byrow=T)
 }
 
-priors<-list()
-priors$aL=1
-priors$bL=1 #lambda0, baseline rate
-priors$aD=matrix(0,1,7)+5 #day effect dirichlet params
-priors$aH=matrix(0,nrow=48,ncol=7)+1 #time of day effect dirichlet param
-priors$z01=.01*10000
-priors$z00=.99*10000   #z(t) event process
-priors$z01 = .01*10000; priors$z00 = .99*10000;     # z(t) event process
-priors$z10 = .25*10000; priors$z11 = .75*10000;     
-priors$aE = 5; priors$bE = 1/3;       # gamma(t), or NBin, for event # process
-priors$MODE = 0;
-
-#' sensorMMPP
+#' priors_gen
 #'
-#' This function provides the main MCMC inference engine
-#' @param N Matrix (Ntimes x 7*Nweeks) of count data (assumed starting Sunday) where Ntimes is the number of time intervals per day and Nweeks is the number of weeks in the data.
-#' @param priors List with parameter values of prior distributions
-#' @param ITERS  Iteration controls: total # of iterations and # used for burn-in
-#' @param EQUIV  Parameter sharing controls = c(S1,S2):  S1 = force sharing of delta (day effect) among days, S2 = force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' This function creates a list of prior parameters
+#' @param aL #lambda0, baseline rate
+#' @param bL #lambda0, baseline rate
+#' @param aD #day effect dirichlet params
+#' @param aH #time of day effect dirichlet param
+#' @param z00 event process
+#' @param z01 event process
+#' @param z10 event process
+#' @param aE gamma process
+#' @param bE gamma process
+#' @param MODE event process
 #' @export 
 #' @examples
 #' priors<-list()
@@ -47,10 +41,36 @@ priors$MODE = 0;
 #' priors$z10 = .25*10000; priors$z11 = .75*10000;     
 #' priors$aE = 5; priors$bE = 1/3;       # gamma(t), or NBin, for event # process
 #' priors$MODE = 0;
+
+priors_gen <- function(aL,bL,aD,aH,z00,z01,z10,z11,aE,bE,MODE){
+prior<-list()
+prior$aL=aL
+prior$bL=bL 
+prior$aD=aD 
+prior$aH=aH 
+prior$z01=z01
+prior$z00=z00   
+prior$z10 =z10
+prior$z11 = z11     
+prior$aE = aE
+prior$bE = bE      
+prior$MODE = MODE
+return(prior)
+}
+
+#' sensorMMPP
+#'
+#' This function provides the main MCMC inference engine
+#' @param N Matrix (Ntimes x 7*Nweeks) of count data (assumed starting Sunday) where Ntimes is the number of time intervals per day and Nweeks is the number of weeks in the data.
+#' @param priors List with parameter values of prior distributions
+#' @param ITERS  Iteration controls: total # of iterations and # used for burn-in
+#' @param EQUIV  Parameter sharing controls = c(S1,S2):  S1 = force sharing of delta (day effect) among days, S2 = force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @export 
+#' @examples
 #' sensorMMPP(N,priors,c(50,10),c(3,3))
 
 sensorMMPP <- function(N,priors,ITERS,EQUIV){
-
+ 
   Niter<-ITERS[1]
   Nburn<-ITERS[2]
   Nplot<-ITERS[3]
@@ -79,7 +99,7 @@ sensorMMPP <- function(N,priors,ITERS,EQUIV){
   samples$logp_NgLM<-matrix(0,1,50)
   samples$logp_NgLZ<-matrix(0,1,50)
   
-
+print(priors)
 for (iter in 1:Niter+Nburn){
 print(iter)
 L <- draw_L_N0(N0,priors,EQUIV);
@@ -106,7 +126,7 @@ samples$logpGD = logpGD
 }
 
 
-return(samples)
+return(list(L=apply(samples$L,c(1,2),mean),Z=apply(samples$Z,c(1,2),mean)))
 }
 
 
@@ -197,12 +217,12 @@ loglikeP <- function (X,L){
 #' @param N 
 #' @param L
 #' @param M
-#' @param prior
+#' @param priors
 #' @export 
 #' @examples
-#' draw_Z_NLM(N,L,M,prior)
+#' draw_Z_NLM(N,L,M,priors)
 #' 
-draw_Z_NLM <- function(N,L,M,prior){
+draw_Z_NLM <- function(N,L,M,priors){
 N0 = N
 NE = 0*N
 Z=0*N
@@ -537,7 +557,7 @@ eval_N_LM<-function(N,L,M,prior) { 	# evaluate p(N | L,M)
 for (t in 1:length(N)){
 if (N[t]!=-1){
 po[1,t] = dpois(N[t],L[t]);      
-po[2,t] = sum(dpois(0:N[t],L[t])*dnbinom(rev(0:N[t]),prior$aE,prior$bE/(1+priors$bE)))
+po[2,t] = sum(dpois(0:N[t],L[t])*dnbinom(rev(0:N[t]),prior$aE,prior$bE/(1+prior$bE)))
 
 }
   else{ po[1,t]=1

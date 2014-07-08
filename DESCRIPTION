@@ -7,6 +7,7 @@ Description: Time-series of count data occur in many different contexts. A
     Markov-modulated Poisson process provides a framework for detecting
     anomalous events using an unsupervised learning approach.
 Depends:
-    R (>= 3.0.2), expm
+    R (>= 3.0.2),
+    expm
 License: GPLv2
 LazyData: true
