@@ -99,7 +99,7 @@ sensorMMPP <- function(N,priors,ITERS,EQUIV){
   samples$logp_NgLM<-matrix(0,1,50)
   samples$logp_NgLZ<-matrix(0,1,50)
   
-print(priors)
+
 for (iter in 1:Niter+Nburn){
 print(iter)
 L <- draw_L_N0(N0,priors,EQUIV);
@@ -530,12 +530,14 @@ paH = matrix(c(paH[,1]+paH[,7],rowSums(paH[,2:6])))
   paH=paH
 }
 
-logp = logp + log(pgamma(L0,sum(sum(N0))+prior$aL,1/(length(N0)+prior$bL)));
+logp = logp + log(pgamma(L0,sum(sum(N0))+prior$aL,1/(length(N0)+prior$bL))+.000001)
+#print(pgamma(L0,sum(sum(N0))+prior$aL,1/(length(N0)+prior$bL)))
 logp = logp + log(dirpdf(D/Nd,aD + paD));
 
 for (i in 1:dim(A)[2]){
-logp = logp + log(dirpdf(A[,i]/Nh,aH[,i]+paH[,i]))
+logp <- logp + log(dirpdf(A[,i]/Nh,aH[,i]+paH[,i]))
 }
+
 return(logp)
 }
 
