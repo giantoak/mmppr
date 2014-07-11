@@ -524,6 +524,7 @@ paH<-matrix(rowSums(paH))
 A = matrix(c((A[,1]+A[,7])/2,rowSums(A[,2:6])/5))
 aH = matrix(c(aH[,1]+aH[,7],rowSums(aH[,2:6])))
 paH = matrix(c(paH[,1]+paH[,7],rowSums(paH[,2:6])))
+print(c(dim(A),dim(aH),dim(paH)))
 } else if(EQUIV[2]==3){
   A<-A
   aH=aH
@@ -535,9 +536,11 @@ logp = logp + log(pgamma(L0,sum(sum(N0))+prior$aL,1/(length(N0)+prior$bL))+.0000
 logp = logp + log(dirpdf(D/Nd,aD + paD));
 
 for (i in 1:dim(A)[2]){
+print(A[,i]/Nh,aH[,i]+paH[,i])  
 logp <- logp + log(dirpdf(A[,i]/Nh,aH[,i]+paH[,i]))
 }
 
+print(logp)
 return(logp)
 }
 
