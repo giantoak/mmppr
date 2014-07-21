@@ -1,4 +1,5 @@
 library(expm)
+library(reshape2)
 
 #' repmat
 #'
@@ -69,7 +70,7 @@ return(prior)
 #' @examples
 #' sensorMMPP(N,priors,c(50,10),c(3,3))
 
-sensorMMPP <- function(N,priors,ITERS,EQUIV){
+sensorMMPP <- function(N,priors,ITERS=c(50,10),EQUIV=c(3,3)){
  
   Niter<-ITERS[1]
   Nburn<-ITERS[2]
@@ -126,7 +127,7 @@ samples$logpGD = logpGD
 }
 
 
-return(list(L=apply(samples$L,c(1,2),mean),Z=apply(samples$Z,c(1,2),mean)))
+return(list(L=melt(apply(samples$L,c(1,2),mean))$value,Z=melt(apply(samples$Z,c(1,2),mean))$value))
 }
 
 
@@ -146,24 +147,44 @@ dirpdf<-function(X,A){
     return(p)
   }
   else{
-    logp=sum((A-1)*log(X))-sum(lgamma(A))+lgamma(sum(A))
+    logp=sum((A-1)*log(X+.0000001))-sum(lgamma(A))+lgamma(sum(A))
   
   p<-exp(logp)  
   return(p)
 }
   }
 
+#' dirlnpdf
+#'
+#' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i -1 times.
+#' @param X vector of probabilities
+#' @param A vector of concentration parameters.
+#' @export 
+#' @examples
+#' dirplndf(X,A)
+dirlnpdf<-function(X,A){
+  k<-length(X)
+  if(k==1){
+    p<-1
+    return(p)
+  }
+  else{
+    logp=sum((A-1)*log(X+.00000001))-sum(lgamma(A))+lgamma(sum(A))
+ 
+    return(logp)
+  }
+}
 
 
 
 #' poisslnpdf
 #'
-#' This function reproduces the matlab function repmat
+#' This function returns the log of poisson
 #' @param X 
 #' @param A
 #' @export 
 #' @examples
-#' dirpdf(X,A)
+#' Update here
 #' 
 poisslnpdf<-function(X,L){  		
 lnp = -L -lgamma(X+1) +log(L)*X;
@@ -376,6 +397,7 @@ A[,1:7] = repmat(matrix(rowMeans(A)),1,dim(A)[2])
 A[,c(1,7)] <- repmat(matrix(rowMeans(A[,c(1,7)])),1,2)
 
 A[,2:6]<-repmat(matrix(rowMeans(A[,2:6])),1,5) 
+
 } else if(EQUIV[2]==3){ A<-A
 }
 
@@ -390,6 +412,7 @@ for (t in 1:dim(L)[1]){
   L[t,d] = L0*D[dd]*A[t,dd]; #fix this line
 } 
 }
+
 
 return(L)
 }
@@ -427,7 +450,9 @@ logp<-function(N,samples,priors,iter,EQUIV){
     logp_LMgN[ii]<-eval_L_N0(Lstar,samples$N0[,,ii],priors,EQUIV)+eval_M_Z(Mstar,samples$Z[,,ii],priors)
   }
   tmpm<-mean(exp(logp_LMgN))+tmpm
+
   logpC<-logp_NgLM+logp_LM-logp_LMgN #Chib estimate
+
   
 }
 
@@ -444,10 +469,7 @@ logp<-function(N,samples,priors,iter,EQUIV){
 eval_M_Z <- function(M,Z,prior){ #evaluate p(M|Z)
 z1 = M[1,2]
 z0 = M[2,1]
-n01=0
-n0=0
-n10=0
-n1=0 
+
 if (length(Z)!=0){
 n01 = sum(Z[1:length(Z)-1]==0 & Z[2:length(Z)]==1) 
 n0=sum(Z[1:length(Z)-1]==0)
@@ -457,7 +479,7 @@ n1=sum(Z[1:length(Z)-1]==1)
 n0<-0
 n10<-0
 n1<-0}  
-logp <- log(pbeta(z0,n01+prior$z01,n0-n01+prior$z00)) + log(pbeta(z1,n10+prior$z10,n1-n10+prior$z11))
+logp <- log(pbeta(z0,n01+prior$z01,n0-n01+prior$z00)+.001) + log(pbeta(z1,n10+prior$z10,n1-n10+prior$z11)+.001)
 return(logp)
 }
   
@@ -491,7 +513,6 @@ logp = 0;
 paD<-prior$aD; 
 aD<-matrix(0,1,Nd); 
 paH<-prior$aH;
-dim(paH)
 aH<-matrix(0,Nh,Nd);
 if (length(N0)!=0){
   for (i in 1:Nd){
@@ -511,7 +532,7 @@ aD=sum(aD)
 } else if (EQUIV[1]==2){
 D = c(D[1]+D[7],sum(D[2:6])); 
 paD=c(paD[1]+paD[7],sum(paD[2:6]))
-D=c(aD[1]+aD[7],sum(aD[2:6]));
+aD=c(aD[1]+aD[7],sum(aD[2:6]));
 } else if (EQUIV[1]==3){
   D = D; paD = paD; paH=paH;
 }
@@ -523,24 +544,23 @@ paH<-matrix(rowSums(paH))
 } else if(EQUIV[2]==2){
 A = matrix(c((A[,1]+A[,7])/2,rowSums(A[,2:6])/5))
 aH = matrix(c(aH[,1]+aH[,7],rowSums(aH[,2:6])))
-paH = matrix(c(paH[,1]+paH[,7],rowSums(paH[,2:6])))
-print(c(dim(A),dim(aH),dim(paH)))
+paH = matrix(c(paH[,1]+paH[,7],rowSums(paH[,2:6])),nrow=1)
+
 } else if(EQUIV[2]==3){
   A<-A
   aH=aH
   paH=paH
 }
 
-logp = logp + log(pgamma(L0,sum(sum(N0))+prior$aL,1/(length(N0)+prior$bL))+.000001)
-#print(pgamma(L0,sum(sum(N0))+prior$aL,1/(length(N0)+prior$bL)))
-logp = logp + log(dirpdf(D/Nd,aD + paD));
+
+logp = logp + log(pgamma(L0,sum(sum(N0)+.00000001)+prior$aL,1/(length(N0)+prior$bL))+.000000001)
+
+logp = logp + log(dirpdf(D/Nd,aD + paD)+.000000001);
 
 for (i in 1:dim(A)[2]){
-print(A[,i]/Nh,aH[,i]+paH[,i])  
-logp <- logp + log(dirpdf(A[,i]/Nh,aH[,i]+paH[,i]))
+logp <- logp + log(dirpdf(A[,i]/Nh,aH[,i]+paH[,i])+.0000000001)
 }
 
-print(logp)
 return(logp)
 }
 

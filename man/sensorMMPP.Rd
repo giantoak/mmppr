@@ -3,7 +3,7 @@
 \alias{sensorMMPP}
 \title{sensorMMPP}
 \usage{
-sensorMMPP(N, priors, ITERS, EQUIV)
+sensorMMPP(N, priors, ITERS = c(50, 10), EQUIV = c(3, 3))
 }
 \arguments{
 \item{N}{Matrix (Ntimes x 7*Nweeks) of count data (assumed starting Sunday) where Ntimes is the number of time intervals per day and Nweeks is the number of weeks in the data.}

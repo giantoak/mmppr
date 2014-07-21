@@ -3,7 +3,7 @@
 \alias{draw_Z_NLM}
 \title{draw_Z_NLM}
 \usage{
-draw_Z_NLM(N, L, M, prior)
+draw_Z_NLM(N, L, M, priors)
 }
 \arguments{
 \item{N}{}
@@ -12,12 +12,12 @@ draw_Z_NLM(N, L, M, prior)
 
 \item{M}{}
 
-\item{prior}{}
+\item{priors}{}
 }
 \description{
 Sample the given N,L,M
 }
 \examples{
-draw_Z_NLM(N,L,M,prior)
+draw_Z_NLM(N,L,M,priors)
 }
 

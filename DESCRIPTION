@@ -8,6 +8,7 @@ Description: Time-series of count data occur in many different contexts. A
     anomalous events using an unsupervised learning approach.
 Depends:
     R (>= 3.0.2),
-    expm
+    expm,
+    reshape2
 License: GPLv2
 LazyData: true

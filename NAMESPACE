@@ -2,6 +2,7 @@
 
 export(":=")
 export(binpdf)
+export(dirlnpdf)
 export(dirpdf)
 export(draw_L_N0)
 export(draw_M_Z)

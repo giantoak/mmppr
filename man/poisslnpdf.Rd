@@ -11,9 +11,9 @@ poisslnpdf(X, L)
 \item{A}{}
 }
 \description{
-This function reproduces the matlab function repmat
+This function returns the log of poisson
 }
 \examples{
-dirpdf(X,A)
+Update here
 }
 
