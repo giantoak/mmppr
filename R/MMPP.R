@@ -70,8 +70,17 @@ return(prior)
 #' @examples
 #' sensorMMPP(N,priors,c(50,10),c(3,3))
 
-sensorMMPP <- function(N,priors,ITERS=c(50,10),EQUIV=c(3,3)){
- 
+sensorMMPP <- function(N,priors=list(aL=1,bL=1,aD=matrix(0,1,7)+5,aH=matrix(0,nrow=48,ncol=7)+1,z00=.99*10000,z01=.01*10000,z10=.25*10000,z11=.75*10000,aE=5,bE=1/3,MODE=0),ITERS=c(50,10),EQUIV=c(3,3)){
+  
+  Nt<-replace(N,N==-1,NA)
+  lenN<-dim(N)[2]
+  priors$aL<-mean(N[N>-1])
+  priors$bL<-1
+  #priors$aD<-c(mean(apply(Nt[,seq(1,lenN,7)],2,mean)),mean(apply(Nt[,seq(2,lenN,7)],2,mean)),mean(apply(Nt[,seq(3,lenN,7)],2,mean)),mean(apply(Nt[,seq(4,lenN,7)],2,mean)),mean(apply(Nt[,seq(5,lenN,7)],2,mean)),mean(apply(Nt[,seq(6,lenN,7)],2,mean)),mean(apply(Nt[,seq(7,lenN,7)],2,mean)))
+  #priors$aH<-matrix(cbind(apply(Nt[,seq(1,lenN,7)],1,mean),apply(Nt[,seq(2,lenN,7)],1,mean),apply(Nt[,seq(3,lenN,7)],1,mean),apply(Nt[,seq(4,lenN,7)],1,mean),apply(Nt[,seq(5,lenN,7)],1,mean),apply(Nt[,seq(6,lenN,7)],1,mean),apply(Nt[,seq(7,lenN,7)],1,mean)),nrow=48)
+  #priors$aD<-c(mean(N[,seq(1,lenN,7)][N[,seq(1,lenN,7)]>-1]),mean(N[,seq(2,lenN,7)][N[,seq(2,lenN,7)]>-1]),mean(N[,seq(3,lenN,7)][N[,seq(3,lenN,7)]>-1]),mean(N[,seq(4,lenN,7)][N[,seq(4,lenN,7)]>-1]),mean(N[,seq(5,lenN,7)][N[,seq(5,lenN,7)]>-1]),mean(N[,seq(6,lenN,7)][N[,seq(6,lenN,7)]>-1]),mean(N[,seq(7,lenN,7)][N[,seq(7,lenN,7)]>-1]))
+  
+  
   Niter<-ITERS[1]
   Nburn<-ITERS[2]
   Nplot<-ITERS[3]
@@ -127,7 +136,7 @@ samples$logpGD = logpGD
 }
 
 
-return(list(L=melt(apply(samples$L,c(1,2),mean))$value,Z=melt(apply(samples$Z,c(1,2),mean))$value))
+return(list(L=melt(apply(samples$L,c(1,2),mean)[,1:7])$value,Z=melt(apply(samples$Z,c(1,2),mean))$value))
 }
 
 
