@@ -10,9 +10,9 @@ library(reshape2)
 #' @export
 #' @examples
 #' repmat(X, m, n)
-repmat = function(X, m, n) {
-  mx = dim(X)[1]
-  nx = dim(X)[2]
+repmat <- function(X, m, n) {
+  mx <- dim(X)[1]
+  nx <- dim(X)[2]
   matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=T)
 }
 
@@ -112,9 +112,9 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
 
 for (iter in 1:Niter+Nburn) {
 print(iter)
-L <- draw_L_N0(N0, priors, EQUIV);
-c(Z, N0, NE) := draw_Z_NLM(N, L, M, priors);
-M <- draw_M_Z(Z, priors);
+L <- draw_L_N0(N0, priors, EQUIV)
+c(Z, N0, NE) := draw_Z_NLM(N, L, M, priors)
+M <- draw_M_Z(Z, priors)
 
 if (iter > Nburn) {
 samples$L[, ,iter-Nburn] = L
@@ -122,8 +122,8 @@ samples$Z[, ,iter-Nburn] = Z
 samples$M[, ,iter-Nburn] = M
 samples$N0[, ,iter-Nburn] = N0
 samples$NE[, ,iter-Nburn] = NE
-samples$logp_NgLM[iter-Nburn] = eval_N_LM(N, L, M, priors);
-samples$logp_NgLZ[iter-Nburn] = eval_N_LZ(N, L, Z, priors);
+samples$logp_NgLM[iter-Nburn] = eval_N_LM(N, L, M, priors)
+samples$logp_NgLZ[iter-Nburn] = eval_N_LZ(N, L, Z, priors)
 }
 
 
@@ -196,7 +196,7 @@ dirlnpdf<-function(X, A) {
 #' Update here
 #'
 poisslnpdf<-function(X, L) {
-lnp = -L -lgamma(X+1) +log(L)*X;
+lnp = -L -lgamma(X+1) +log(L)*X
 }
 
 #' binpdf
@@ -263,8 +263,8 @@ po <-matrix(0, 2, length(N))
 p  <-matrix(0, 2, length(N))
 for (t in 1:length(N)) {
 if (N[t]!=-1) {
-  po[1, t] <- dpois(N[t], L[t])+ep;
-  po[2, t] <- sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), priors$aE, priors$bE/(1+priors$bE)))+ep;
+  po[1, t] <- dpois(N[t], L[t])+ep
+  po[2, t] <- sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), priors$aE, priors$bE/(1+priors$bE)))+ep
 }
   else {po[1, t]<-1
         po[2, t]<-1}
@@ -272,7 +272,7 @@ if (N[t]!=-1) {
 
 # Compute forward (filtering) posterior marginals
 p[, 1] <- PRIOR*po[, 1]
-p[, 1] <-p[, 1]/sum(p[, 1]);
+p[, 1] <-p[, 1]/sum(p[, 1])
 for (t in 2:length(N)) {
   p[, t] <- (M%*%p[, t-1])*po[, t]
   p[, t]<-p[, t]/sum(p[, t])
@@ -288,13 +288,13 @@ for (t in rev(1:length(N))) {
         ptmp<-ptmp-max(ptmp)
         ptmp=exp(ptmp)
         ptmp=ptmp/sum(ptmp)
-        N0[t] = min(which(cumsum(ptmp) >= runif(1)))-1; # draw sample of N0
+        N0[t] = min(which(cumsum(ptmp) >= runif(1)))-1 # draw sample of N0
         NE[t]=N[t]-N0[t]                       # and compute NE
     }
   else{
         Z[t]=1
         N0[t]=rpois(1, L[t])
-        NE[t]=rnbinom(1, priors$aE, priors$bE/(1+priors$bE));
+        NE[t]=rnbinom(1, priors$aE, priors$bE/(1+priors$bE))
       }
   }
   else{
@@ -356,7 +356,7 @@ draw_M_Z <- function(Z, prior) {
 #' draw_L_N0(Z, prior)
 #'
 draw_L_N0<- function(N0, prior, EQUIV) {
-Nd=7;
+Nd=7
 Nh=dim(N0)[1]
 #1st: OVERALL AVERAGE RATE
 if (prior$MODE) {
@@ -364,18 +364,18 @@ L0 = (sum(N0)+prior$aL)/(length(N0)+prior$bL)
 } else{
   L0 = rgamma(1, shape=sum(N0)+prior$aL, scale=1/(length(N0)+prior$bL))
 }
-L = matrix(0, dim(N0)[1], dim(N0)[2]) + L0;
+L = matrix(0, dim(N0)[1], dim(N0)[2]) + L0
 # 2nd: DAY EFFECT
 D = matrix(0, 1, Nd)
 for(i in 1:length(D)) {
-alpha =  sum(N0[, seq(i, dim(N0)[2], 7)])+prior$aD[i];
+alpha =  sum(N0[, seq(i, dim(N0)[2], 7)])+prior$aD[i]
 if (prior$MODE)
   D[i] = (alpha-1)           #mode of Gamma(a, 1) distribution
 else
   D[i] = rgamma(1, alpha, scale=1)
 }
 # 3rd: TIME OF DAY EFFECT
-A = matrix(0, Nh, Nd);
+A = matrix(0, Nh, Nd)
 
 for (tau in 1:(dim(A)[2])) {
 for (i in 1:dim(A)[1]) {
@@ -417,8 +417,8 @@ A[, tau]=A[, tau]/mean(A[, tau])
 # COMPUTE L(t)
 for (d in 1:dim(L)[2]) {
 for (t in 1:dim(L)[1]) {
-  dd=(d-1)%%7+1;
-  L[t, d] = L0*D[dd]*A[t, dd]; #fix this line
+  dd=(d-1)%%7+1
+  L[t, d] = L0*D[dd]*A[t, dd] #fix this line
 }
 }
 
@@ -517,12 +517,12 @@ for (i in 1:Nd) {
     A[j, i] = L[j, i]/L0/D[i]
   }
 }
-logp = 0;
+logp = 0
 # ENFORCE PARAMETER SHARING
-paD<-prior$aD;
-aD<-matrix(0, 1, Nd);
-paH<-prior$aH;
-aH<-matrix(0, Nh, Nd);
+paD<-prior$aD
+aD<-matrix(0, 1, Nd)
+paH<-prior$aH
+aH<-matrix(0, Nh, Nd)
 if (length(N0)!=0) {
   for (i in 1:Nd) {
     aD[i] = sum(N0[, seq(i, dim(N0)[2], Nd)]) #fix this line
@@ -539,11 +539,13 @@ D = sum(D)
 paD = sum(paD)
 aD=sum(aD)
 } else if (EQUIV[1]==2) {
-D = c(D[1]+D[7], sum(D[2:6]));
+D = c(D[1]+D[7], sum(D[2:6]))
 paD=c(paD[1]+paD[7], sum(paD[2:6]))
-aD=c(aD[1]+aD[7], sum(aD[2:6]));
+aD=c(aD[1]+aD[7], sum(aD[2:6]))
 } else if (EQUIV[1]==3) {
-  D = D; paD = paD; paH=paH;
+  D = D
+  paD = paD
+  paH=paH
 }
 
 if(EQUIV[2]==1) { # tau(t)
@@ -564,7 +566,7 @@ paH = matrix(c(paH[, 1]+paH[, 7], rowSums(paH[, 2:6])), nrow=1)
 
 logp = logp + log(pgamma(L0, sum(sum(N0)+.00000001)+prior$aL, 1/(length(N0)+prior$bL))+.000000001)
 
-logp = logp + log(dirpdf(D/Nd, aD + paD)+.000000001);
+logp = logp + log(dirpdf(D/Nd, aD + paD)+.000000001)
 
 for (i in 1:dim(A)[2]) {
 logp <- logp + log(dirpdf(A[, i]/Nh, aH[, i]+paH[, i])+.0000000001)
@@ -586,11 +588,11 @@ return(logp)
 #'
 eval_N_LM<-function(N, L, M, prior) { 	# evaluate p(N | L, M)
   PRIOR <-M%^%100%*%as.vector(c(1, 0))
-  po <-matrix(0, 2, length(N));
-  p  <-matrix(0, 2, length(N));
+  po <-matrix(0, 2, length(N))
+  p  <-matrix(0, 2, length(N))
 for (t in 1:length(N)) {
 if (N[t]!=-1) {
-po[1, t] = dpois(N[t], L[t]);
+po[1, t] = dpois(N[t], L[t])
 po[2, t] = sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), prior$aE, prior$bE/(1+prior$bE)))
 
 }
@@ -601,13 +603,13 @@ po[2, t] = sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), prior$aE, prior$bE/(1+pr
 
 p[, 1] = PRIOR*po[, 1]
 sp=sum(p[, 1])
-logp = log(sp);
-p[, 1]=p[, 1]/sp;
+logp = log(sp)
+p[, 1]=p[, 1]/sp
 for (t in 2:length(N)) {
 p[, t] = (M%*%p[, t-1])*po[, t]
 sp=sum(p[, t])
-logp = logp + log(sp);
-p[, t]=p[, t]/sp;
+logp = logp + log(sp)
+p[, t]=p[, t]/sp
 }
   return(logp)
 }
@@ -624,7 +626,7 @@ p[, t]=p[, t]/sp;
 #' eval_N_LZ
 #'
 eval_N_LZ <- function(N, L, Z, prior) {
-logp = 0;
+logp = 0
 for (t in 1:length(N)) {
 if (N[t]!=-1) {
 if (Z[t]==0) {
