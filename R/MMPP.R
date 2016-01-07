@@ -43,20 +43,20 @@ repmat = function(X,m,n) {
 #' priors$aE = 5; priors$bE = 1/3;       # gamma(t), or NBin, for event # process
 #' priors$MODE = 0;
 
-priors_gen <- function(aL,bL,aD,aH,z00,z01,z10,z11,aE,bE,MODE) {
-prior<-list()
-prior$aL=aL
-prior$bL=bL
-prior$aD=aD
-prior$aH=aH
-prior$z01=z01
-prior$z00=z00
-prior$z10 =z10
-prior$z11 = z11
-prior$aE = aE
-prior$bE = bE
-prior$MODE = MODE
-return(prior)
+priors_gen <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
+  prior <- list()
+  prior$aL <- aL
+  prior$bL <- bL
+  prior$aD <- aD
+  prior$aH <- aH
+  prior$z01 <- z01
+  prior$z00 <- z00
+  prior$z10 <- z10
+  prior$z11 <- z11
+  prior$aE <- aE
+  prior$bE <- bE
+  prior$MODE <- MODE
+  return(prior)
 }
 
 #' sensorMMPP
