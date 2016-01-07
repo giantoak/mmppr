@@ -31,7 +31,7 @@ repmat <- function(X, m, n) {
 #' @param MODE event process
 #' @export
 #' @examples
-#' priors<-list()
+#' priors <- list()
 #' priors$aL=1
 #' priors$bL=1 #lambda0, baseline rate
 #' priors$aD=matrix(0, 1, 7)+5 #day effect dirichlet params
@@ -72,28 +72,28 @@ priors_gen <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
 
 sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matrix(0, nrow=48, ncol=7)+1, z00=.99*10000, z01=.01*10000, z10=.25*10000, z11=.75*10000, aE=5, bE=1/3, MODE=0), ITERS=c(50, 10), EQUIV=c(3, 3)) {
 
-  Nt<-replace(N, N==-1, NA)
-  lenN<-dim(N)[2]
-  priors$aL<-mean(N[N>-1])
-  priors$bL<-1
-  #priors$aD<-c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
-  #priors$aH<-matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean), apply(Nt[, seq(2, lenN, 7)], 1, mean), apply(Nt[, seq(3, lenN, 7)], 1, mean), apply(Nt[, seq(4, lenN, 7)], 1, mean), apply(Nt[, seq(5, lenN, 7)], 1, mean), apply(Nt[, seq(6, lenN, 7)], 1, mean), apply(Nt[, seq(7, lenN, 7)], 1, mean)), nrow=48)
-  #priors$aD<-c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)]>-1]), mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)]>-1]), mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)]>-1]), mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)]>-1]), mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)]>-1]), mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)]>-1]), mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)]>-1]))
+  Nt <- replace(N, N==-1, NA)
+  lenN <- dim(N)[2]
+  priors$aL <- mean(N[N>-1])
+  priors$bL <- 1
+  #priors$aD <- c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
+  #priors$aH <- matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean), apply(Nt[, seq(2, lenN, 7)], 1, mean), apply(Nt[, seq(3, lenN, 7)], 1, mean), apply(Nt[, seq(4, lenN, 7)], 1, mean), apply(Nt[, seq(5, lenN, 7)], 1, mean), apply(Nt[, seq(6, lenN, 7)], 1, mean), apply(Nt[, seq(7, lenN, 7)], 1, mean)), nrow=48)
+  #priors$aD <- c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)]>-1]), mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)]>-1]), mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)]>-1]), mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)]>-1]), mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)]>-1]), mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)]>-1]), mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)]>-1]))
 
 
-  Niter<-ITERS[1]
-  Nburn<-ITERS[2]
-  Nplot<-ITERS[3]
+  Niter <- ITERS[1]
+  Nburn <- ITERS[2]
+  Nplot <- ITERS[3]
 
-  Z<-matrix(0, dim(N)[1], dim(N)[2])
-  N0<-pmax(N, 1)
-  NE<-matrix(0, dim(N)[1], dim(N)[2])
-  L<-(N+5)/2
-  M<-matrix(c(.999, .001, .5, .5), nrow=2)
+  Z <- matrix(0, dim(N)[1], dim(N)[2])
+  N0 <- pmax(N, 1)
+  NE <- matrix(0, dim(N)[1], dim(N)[2])
+  L <- (N+5)/2
+  M <- matrix(c(.999, .001, .5, .5), nrow=2)
   xs <- seq(0, 1, 80)
-  Nd<-7
-  Nh<-dim(N)[1]
-  samples<-list()
+  Nd <- 7
+  Nh <- dim(N)[1]
+  samples <- list()
   samples$L <- vector("list", Niter)
   samples$Z <- vector("list", Niter)
   samples$M <- vector("list", Niter)
@@ -101,13 +101,13 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
   samples$NE <- vector("list", Niter)
   samples$logp_NgLM <- vector("list", Niter)
   samples$logp_NgLZ <- vector("list", Niter)
-  samples$L<-array(0, dim=c(dim(L)[1], dim(L)[2], Niter))
-  samples$Z<-array(0, dim=c(dim(Z)[1], dim(Z)[2], Niter))
-  samples$M<-array(0, dim=c(dim(M)[1], dim(M)[2], Niter))
-  samples$N0<-array(0, dim=c(dim(N0)[1], dim(N0)[2], Niter))
-  samples$NE<-array(0, dim=c(dim(NE)[1], dim(NE)[2], Niter))
-  samples$logp_NgLM<-matrix(0, 1, 50)
-  samples$logp_NgLZ<-matrix(0, 1, 50)
+  samples$L <- array(0, dim=c(dim(L)[1], dim(L)[2], Niter))
+  samples$Z <- array(0, dim=c(dim(Z)[1], dim(Z)[2], Niter))
+  samples$M <- array(0, dim=c(dim(M)[1], dim(M)[2], Niter))
+  samples$N0 <- array(0, dim=c(dim(N0)[1], dim(N0)[2], Niter))
+  samples$NE <- array(0, dim=c(dim(NE)[1], dim(NE)[2], Niter))
+  samples$logp_NgLM <- matrix(0, 1, 50)
+  samples$logp_NgLZ <- matrix(0, 1, 50)
 
 
 for (iter in 1:Niter+Nburn) {
@@ -149,16 +149,16 @@ return(list(L=melt(apply(samples$L, c(1, 2), mean)[, 1:7])$value, Z=melt(apply(s
 #' @export
 #' @examples
 #' dirpdf(X, A)
-dirpdf<-function(X, A) {
-  k<-length(X)
+dirpdf <- function(X, A) {
+  k <- length(X)
   if(k==1) {
-    p<-1
+    p <- 1
     return(p)
   }
   else{
     logp=sum((A-1)*log(X+.0000001))-sum(lgamma(A))+lgamma(sum(A))
 
-  p<-exp(logp)
+  p <- exp(logp)
   return(p)
 }
   }
@@ -171,10 +171,10 @@ dirpdf<-function(X, A) {
 #' @export
 #' @examples
 #' dirplndf(X, A)
-dirlnpdf<-function(X, A) {
-  k<-length(X)
+dirlnpdf <- function(X, A) {
+  k <- length(X)
   if(k==1) {
-    p<-1
+    p <- 1
     return(p)
   }
   else{
@@ -195,7 +195,7 @@ dirlnpdf<-function(X, A) {
 #' @examples
 #' Update here
 #'
-poisslnpdf<-function(X, L) {
+poisslnpdf <- function(X, L) {
 lnp = -L -lgamma(X+1) +log(L)*X
 }
 
@@ -209,7 +209,7 @@ lnp = -L -lgamma(X+1) +log(L)*X
 #' @examples
 #' binpdf(X, A)
 #'
-binpdf<-function(X, R, P) {
+binpdf <- function(X, R, P) {
 lnp = lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
 p = exp(lnp)
 }
@@ -224,7 +224,7 @@ p = exp(lnp)
 #' @examples
 #' nbinlnpdf(X, R, P)
 #'
-nbinlnpdf<-function(X, R, P) {		# log(neg binomial)
+nbinlnpdf <- function(X, R, P) {		# log(neg binomial)
 lnp = lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
 }
 
@@ -266,8 +266,8 @@ if (N[t]!=-1) {
   po[1, t] <- dpois(N[t], L[t])+ep
   po[2, t] <- sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), priors$aE, priors$bE/(1+priors$bE)))+ep
 }
-  else {po[1, t]<-1
-        po[2, t]<-1}
+  else {po[1, t] <- 1
+        po[2, t] <- 1}
 }
 
 # Compute forward (filtering) posterior marginals
@@ -275,7 +275,7 @@ p[, 1] <- PRIOR*po[, 1]
 p[, 1] <-p[, 1]/sum(p[, 1])
 for (t in 2:length(N)) {
   p[, t] <- (M%*%p[, t-1])*po[, t]
-  p[, t]<-p[, t]/sum(p[, t])
+  p[, t] <- p[, t]/sum(p[, t])
 }
 
 # Do backward sampling
@@ -285,7 +285,7 @@ for (t in rev(1:length(N))) {
         Z[t] = 1
         # likelihood of all possible event/normal combinations (all possible values of N(E)
         ptmp = log(dpois(0:N[t], L[t])) + log(dnbinom(rev(seq(0, N[t], 1)), priors$aE, priors$bE/(1+priors$bE)))
-        ptmp<-ptmp-max(ptmp)
+        ptmp <- ptmp-max(ptmp)
         ptmp=exp(ptmp)
         ptmp=ptmp/sum(ptmp)
         N0[t] = min(which(cumsum(ptmp) >= runif(1)))-1 # draw sample of N0
@@ -318,10 +318,10 @@ if (t>1) {
   }
 }
 
- out<-list()
- out$Z<-Z
- out$N0<-N0
- out$NE<-NE
+ out <- list()
+ out$Z <- Z
+ out$N0 <- N0
+ out$NE <- NE
  return(out)
 }
 
@@ -405,9 +405,9 @@ A[, 1:7] = repmat(matrix(rowMeans(A)), 1, dim(A)[2])
 } else if (EQUIV[2]==2) {
 A[, c(1, 7)] <- repmat(matrix(rowMeans(A[, c(1, 7)])), 1, 2)
 
-A[, 2:6]<-repmat(matrix(rowMeans(A[, 2:6])), 1, 5)
+A[, 2:6] <- repmat(matrix(rowMeans(A[, 2:6])), 1, 5)
 
-} else if(EQUIV[2]==3) { A<-A
+} else if(EQUIV[2]==3) { A <- A
 }
 
 for (tau in 1:dim(A)[2]) {
@@ -438,29 +438,29 @@ return(L)
 #' @examples
 #' logp(N, samples, priors, iter, EQUIV)
 #'
-logp<-function(N, samples, priors, iter, EQUIV) {
+logp <- function(N, samples, priors, iter, EQUIV) {
 
-  tmp<-samples$logp_NgLZ[1:iter]
-  tmpm<-mean(tmp)
-  temp<-tmp-tmpm
-  logpGDz<-log(1/mean(1/exp(tmp)))+tmpm #Gelfand-Dey estimate
+  tmp <- samples$logp_NgLZ[1:iter]
+  tmpm <- mean(tmp)
+  temp <- tmp-tmpm
+  logpGDz <- log(1/mean(1/exp(tmp)))+tmpm #Gelfand-Dey estimate
 
-  tmp<-samples$logp_NgLZ[1:iter]
-  tmpm<-mean(tmp)
-  temp<-tmp-tmpm
-  logpGD<-log(1/mean(1/exp(tmp)))+tmpm #Gelfand-Dey estimate, marginalizing over Z
+  tmp <- samples$logp_NgLZ[1:iter]
+  tmpm <- mean(tmp)
+  temp <- tmp-tmpm
+  logpGD <- log(1/mean(1/exp(tmp)))+tmpm #Gelfand-Dey estimate, marginalizing over Z
 
-  Lstar<-apply(samples$L, c(1, 2), mean)
-  Mstar<-apply(samples$M, c(1, 2), mean)
-  logp_LMgN<-matrix(0, 1, iter)
+  Lstar <- apply(samples$L, c(1, 2), mean)
+  Mstar <- apply(samples$M, c(1, 2), mean)
+  logp_LMgN <- matrix(0, 1, iter)
   logp_LM <- eval_L_N0(Lstar, vector(), priors, EQUIV)+eval_M_Z(Mstar, 0, priors)
   logp_NgLM <- eval_N_LM(N, Lstar, Mstar, priors)
   for (ii in 1:iter) {
-    logp_LMgN[ii]<-eval_L_N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+eval_M_Z(Mstar, samples$Z[, ,ii], priors)
+    logp_LMgN[ii] <- eval_L_N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+eval_M_Z(Mstar, samples$Z[, ,ii], priors)
   }
-  tmpm<-mean(exp(logp_LMgN))+tmpm
+  tmpm <- mean(exp(logp_LMgN))+tmpm
 
-  logpC<-logp_NgLM+logp_LM-logp_LMgN #Chib estimate
+  logpC <- logp_NgLM+logp_LM-logp_LMgN #Chib estimate
 
 
 }
@@ -484,10 +484,10 @@ n01 = sum(Z[1:length(Z)-1]==0 & Z[2:length(Z)]==1)
 n0=sum(Z[1:length(Z)-1]==0)
 n10 =  sum(Z[1:length(Z)-1]==1 & Z[2:length(Z)]==0)
 n1=sum(Z[1:length(Z)-1]==1)
-} else {n01<-0
-n0<-0
-n10<-0
-n1<-0}
+} else {n01 <- 0
+n0 <- 0
+n10 <- 0
+n1 <- 0}
 logp <- log(pbeta(z0, n01+prior$z01, n0-n01+prior$z00)+.001) + log(pbeta(z1, n10+prior$z10, n1-n10+prior$z11)+.001)
 return(logp)
 }
@@ -507,8 +507,8 @@ eval_L_N0 <- function(L, N0, prior, EQUIV) {  # evaluate p(L | N0)
 L0 = mean(L)
 Nd = 7
 Nh=dim(L)[1]
-A<-matrix(0, Nh, Nd)
-D<-rep(NA, Nd)
+A <- matrix(0, Nh, Nd)
+D <- rep(NA, Nd)
 for (i in 1:Nd) {
   D[i] = mean(L[, i]/L0)
 }
@@ -519,10 +519,10 @@ for (i in 1:Nd) {
 }
 logp = 0
 # ENFORCE PARAMETER SHARING
-paD<-prior$aD
-aD<-matrix(0, 1, Nd)
-paH<-prior$aH
-aH<-matrix(0, Nh, Nd)
+paD <- prior$aD
+aD <- matrix(0, 1, Nd)
+paH <- prior$aH
+aH <- matrix(0, Nh, Nd)
 if (length(N0)!=0) {
   for (i in 1:Nd) {
     aD[i] = sum(N0[, seq(i, dim(N0)[2], Nd)]) #fix this line
@@ -549,16 +549,16 @@ aD=c(aD[1]+aD[7], sum(aD[2:6]))
 }
 
 if(EQUIV[2]==1) { # tau(t)
-A<-matrix(rowSums(A)/Nd)
-aH<-matrix(rowSums(aH))
-paH<-matrix(rowSums(paH))
+A <- matrix(rowSums(A)/Nd)
+aH <- matrix(rowSums(aH))
+paH <- matrix(rowSums(paH))
 } else if(EQUIV[2]==2) {
 A = matrix(c((A[, 1]+A[, 7])/2, rowSums(A[, 2:6])/5))
 aH = matrix(c(aH[, 1]+aH[, 7], rowSums(aH[, 2:6])))
 paH = matrix(c(paH[, 1]+paH[, 7], rowSums(paH[, 2:6])), nrow=1)
 
 } else if(EQUIV[2]==3) {
-  A<-A
+  A <- A
   aH=aH
   paH=paH
 }
@@ -586,7 +586,7 @@ return(logp)
 #' @examples
 #' eval_N_LM
 #'
-eval_N_LM<-function(N, L, M, prior) { 	# evaluate p(N | L, M)
+eval_N_LM <- function(N, L, M, prior) { 	# evaluate p(N | L, M)
   PRIOR <-M%^%100%*%as.vector(c(1, 0))
   po <-matrix(0, 2, length(N))
   p  <-matrix(0, 2, length(N))
