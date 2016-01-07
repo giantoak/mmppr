@@ -1,14 +1,13 @@
 Package: mmppr
-Title: Markov modulated Poisson process for unsupervised event detection in
-    time series of counts
 Version: 0.1
-Authors@R: "Graham Mueller <wgmueller@gmail.com> [aut, cre]"
+Date: 2016-01-06
+Title: Markov modulated Poisson process for unsupervised event detection in time series of counts
+Authors@R: c(person("Graham", "Mueller", role = c("aut", "cre"), email = "wgmueller@gmail.com"))
+Author: Graham Mueller [aut, cre]
+Maintainer: Peter Landwehr <peter.landwehr@giantoak.com>
+Depends: R (>= 3.0.2), expm, reshape2
 Description: Time-series of count data occur in many different contexts. A
     Markov-modulated Poisson process provides a framework for detecting
     anomalous events using an unsupervised learning approach.
-Depends:
-    R (>= 3.0.2),
-    expm,
-    reshape2
-License: GPLv2
+License: GPL (>= 2)
 LazyData: true
