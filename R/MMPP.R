@@ -273,10 +273,10 @@ for (t in rev(1:length(N))) {
         # likelihood of all possible event/normal combinations (all possible values of N(E)
         ptmp <- log(dpois(0:N[t], L[t])) + log(dnbinom(rev(seq(0, N[t], 1)), priors$aE, priors$bE/(1+priors$bE)))
         ptmp <- ptmp-max(ptmp)
-        ptmp=exp(ptmp)
-        ptmp=ptmp/sum(ptmp)
-        N0[t] = min(which(cumsum(ptmp) >= runif(1)))-1 # draw sample of N0
-        NE[t]=N[t]-N0[t]                       # and compute NE
+        ptmp <- exp(ptmp)
+        ptmp <- ptmp/sum(ptmp)
+        N0[t] <- min(which(cumsum(ptmp) >= runif(1)))-1 # draw sample of N0
+        NE[t] <- N[t]-N0[t]                       # and compute NE
     }
   else{
         Z[t]=1
@@ -284,13 +284,13 @@ for (t in rev(1:length(N))) {
         NE[t]=rnbinom(1, priors$aE, priors$bE/(1+priors$bE))
       }
   }
-  else{
-    if (N[t]!=-1) {
-      Z[t] = 0
-      N0[t] = N[t]
+  else {
+    if (N[t] != -1) {
+      Z[t] <- 0
+      N0[t] <- N[t]
       NE[t]=0             # no event at time t
       }
-    else{
+    else {
       Z[t]=0
       N0[t]=rpois(1, L[t])
       NE[t]=0
@@ -463,15 +463,17 @@ logp <- function(N, samples, priors, iter, EQUIV) {
 #' eval_M_Z
 #'
 eval_M_Z <- function(M, Z, prior) { #evaluate p(M|Z)
-z1 = M[1, 2]
-z0 = M[2, 1]
+z1 <- M[1, 2]
+z0 <- M[2, 1]
 
-if (length(Z)!=0) {
-n01 = sum(Z[1:length(Z)-1]==0 & Z[2:length(Z)]==1)
-n0=sum(Z[1:length(Z)-1]==0)
-n10 =  sum(Z[1:length(Z)-1]==1 & Z[2:length(Z)]==0)
-n1=sum(Z[1:length(Z)-1]==1)
-} else {n01 <- 0
+if (length(Z) != 0) {
+n01 <- sum(Z[1:length(Z)-1] == 0 & Z[2:length(Z)] == 1)
+n0=sum(Z[1:length(Z)-1] == 0)
+n10 <-  sum(Z[1:length(Z)-1] == 1 & Z[2:length(Z)] == 0)
+n1=sum(Z[1:length(Z)-1] == 1)
+}
+else {
+n01 <- 0
 n0 <- 0
 n10 <- 0
 n1 <- 0}
