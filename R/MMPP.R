@@ -16,7 +16,7 @@ repmat <- function(X, m, n) {
   return(matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=T))
 }
 
-#' priors_gen
+#' generate.priors
 #'
 #' This function creates a list of prior parameters
 #' @param aL #lambda0, baseline rate
@@ -42,7 +42,7 @@ repmat <- function(X, m, n) {
 #' priors$z10 <- .25*10000; priors$z11 <- .75*10000;
 #' priors$aE <- 5; priors$bE <- 1/3;       # gamma(t), or NBin, for event # process
 #' priors$MODE <- 0;
-priors_gen <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
+generate.priors <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
   prior <- list()
   prior$aL <- aL
   prior$bL <- bL
@@ -133,15 +133,15 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
     Z=melt(apply(samples$Z, c(1, 2), mean))$value))
 }
 
-#' dirpdf
+#' dirichlet.log.pdf
 #'
 #' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
 #' @param X vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
 #' @examples
-#' dirpdf(X, A)
-dirpdf <- function(K.probs, A) {
+#' dirichlet.log.pdf(K.probs, A)
+dirichlet.log.pdf <- function(K.probs, A) {
   if (length(K.probs) == 1) {
     # It _seems_ like this should be 0, since ln(1) = 0. However, Graham has it as one.
     return(1)
@@ -150,24 +150,23 @@ dirpdf <- function(K.probs, A) {
   return(sum((A-1)*log(K.probs+.00000001))-sum(lgamma(A))+lgamma(sum(A)))
 }
 
-#' dirlnpdf
+#' dirichlet.pdf
 #'
 #' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
 #' @param K.probs vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
 #' @examples
-#' dirplndf(X, A)
-dirlnpdf <- function(K.probs, A) {
+#' dirichlet.pdf(X, A)
+dirichlet.pdf <- function(K.probs, A) {
   if (length(K.probs) == 1) {
     return(1)
   }
 
-  log.p <- sum((A-1)*log(K.probs+.00000001))-sum(lgamma(A))+lgamma(sum(A))
-  return(log.p)
+  return(exp(dirichlet.log.pdf(K.probs, A)))
 }
 
-#' poisslnpdf
+#' poisson.log.pdf
 #'
 #' This function returns the log of poisson
 #' @param X
@@ -176,11 +175,11 @@ dirlnpdf <- function(K.probs, A) {
 #' @examples
 #' Update here
 #'
-poisslnpdf <- function(X, L) {
+poisson.log.pdf <- function(X, L) {
   return(-L -lgamma(X+1) +log(L)*X)
 }
 
-#' binpdf
+#' neg.binomial.log.pdf
 #'
 #' The log probability density function for the negative binomial distribution.
 #' @param X
@@ -188,25 +187,24 @@ poisslnpdf <- function(X, L) {
 #' @param P
 #' @export
 #' @examples
-#' binpdf(X, A)
+#' neg.binomial.log.pdf(X, R, P)
 #'
-binpdf <- function(X, R, P) {
-  lnp <- lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
-  p <- exp(lnp)
+neg.binomial.log.pdf <- function(X, R, P) {
+  return(lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X)
 }
 
-#' nbinlnpdf
+#' neg.binomial.pdf
 #'
-#' The log probability density function for the negative binomial distribution.
+#' The probability density function for the negative binomial distribution.
 #' @param X
 #' @param R
 #' @param P
 #' @export
 #' @examples
-#' nbinlnpdf(X, R, P)
+#' neg.binomial.pdf(X, A)
 #'
-nbinlnpdf <- function(X, R, P) {		# log(neg binomial)
-  lnp <- lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
+neg.binomial.pdf <- function(X, R, P) {
+  return(exp(neg.binomial.log.pdf(X, R, P)))
 }
 
 #' loglikeP
