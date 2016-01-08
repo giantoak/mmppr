@@ -38,11 +38,10 @@ repmat <- function(X, m, n) {
 #' priors$aH=matrix(0, nrow=48, ncol=7)+1 #time of day effect dirichlet param
 #' priors$z01=.01*10000
 #' priors$z00=.99*10000   #z(t) event process
-#' priors$z01 = .01*10000; priors$z00 = .99*10000;     # z(t) event process
-#' priors$z10 = .25*10000; priors$z11 = .75*10000;
-#' priors$aE = 5; priors$bE = 1/3;       # gamma(t), or NBin, for event # process
-#' priors$MODE = 0;
-
+#' priors$z01 <- .01*10000; priors$z00 <- .99*10000;     # z(t) event process
+#' priors$z10 <- .25*10000; priors$z11 <- .75*10000;
+#' priors$aE <- 5; priors$bE <- 1/3;       # gamma(t), or NBin, for event # process
+#' priors$MODE <- 0;
 priors_gen <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
   prior <- list()
   prior$aL <- aL
@@ -65,21 +64,18 @@ priors_gen <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
 #' @param N Matrix (Ntimes x 7*Nweeks) of count data (assumed starting Sunday) where Ntimes is the number of time intervals per day and Nweeks is the number of weeks in the data.
 #' @param priors List with parameter values of prior distributions
 #' @param ITERS  Iteration controls: total # of iterations and # used for burn-in
-#' @param EQUIV  Parameter sharing controls = c(S1, S2):  S1 = force sharing of delta (day effect) among days, S2 = force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @param EQUIV  Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 #' @examples
 #' sensorMMPP(N, priors, c(50, 10), c(3, 3))
-
 sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matrix(0, nrow=48, ncol=7)+1, z00=.99*10000, z01=.01*10000, z10=.25*10000, z11=.75*10000, aE=5, bE=1/3, MODE=0), ITERS=c(50, 10), EQUIV=c(3, 3)) {
-
-  Nt <- replace(N, N==-1, NA)
+  Nt <- replace(N, N == -1, NA)
   lenN <- dim(N)[2]
   priors$aL <- mean(N[N>-1])
   priors$bL <- 1
-  #priors$aD <- c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
-  #priors$aH <- matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean), apply(Nt[, seq(2, lenN, 7)], 1, mean), apply(Nt[, seq(3, lenN, 7)], 1, mean), apply(Nt[, seq(4, lenN, 7)], 1, mean), apply(Nt[, seq(5, lenN, 7)], 1, mean), apply(Nt[, seq(6, lenN, 7)], 1, mean), apply(Nt[, seq(7, lenN, 7)], 1, mean)), nrow=48)
+  # priors$aD <- c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
+  # priors$aH <- matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean), apply(Nt[, seq(2, lenN, 7)], 1, mean), apply(Nt[, seq(3, lenN, 7)], 1, mean), apply(Nt[, seq(4, lenN, 7)], 1, mean), apply(Nt[, seq(5, lenN, 7)], 1, mean), apply(Nt[, seq(6, lenN, 7)], 1, mean), apply(Nt[, seq(7, lenN, 7)], 1, mean)), nrow=48)
   #priors$aD <- c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)]>-1]), mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)]>-1]), mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)]>-1]), mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)]>-1]), mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)]>-1]), mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)]>-1]), mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)]>-1]))
-
 
   Niter <- ITERS[1]
   Nburn <- ITERS[2]
@@ -109,42 +105,39 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
   samples$logp_NgLM <- matrix(0, 1, 50)
   samples$logp_NgLZ <- matrix(0, 1, 50)
 
+  for (iter in 1:Niter+Nburn) {
+    print(iter)
+    L <- draw_L_N0(N0, priors, EQUIV)
+    c(Z, N0, NE) := draw_Z_NLM(N, L, M, priors)
+    M <- draw_M_Z(Z, priors)
 
-for (iter in 1:Niter+Nburn) {
-print(iter)
-L <- draw_L_N0(N0, priors, EQUIV)
-c(Z, N0, NE) := draw_Z_NLM(N, L, M, priors)
-M <- draw_M_Z(Z, priors)
+    if (iter > Nburn) {
+      samples$L[, ,iter-Nburn] <- L
+      samples$Z[, ,iter-Nburn] <- Z
+      samples$M[, ,iter-Nburn] <- M
+      samples$N0[, ,iter-Nburn] <- N0
+      samples$NE[, ,iter-Nburn] <- NE
+      samples$logp_NgLM[iter-Nburn] <- eval_N_LM(N, L, M, priors)
+      samples$logp_NgLZ[iter-Nburn] <- eval_N_LZ(N, L, Z, priors)
+    }
 
-if (iter > Nburn) {
-samples$L[, ,iter-Nburn] = L
-samples$Z[, ,iter-Nburn] = Z
-samples$M[, ,iter-Nburn] = M
-samples$N0[, ,iter-Nburn] = N0
-samples$NE[, ,iter-Nburn] = NE
-samples$logp_NgLM[iter-Nburn] = eval_N_LM(N, L, M, priors)
-samples$logp_NgLZ[iter-Nburn] = eval_N_LZ(N, L, Z, priors)
+    c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-Nburn, EQUIV)
+    logpC=logpC/log(2)
+    logpGD=logpGD/log(2)
+    logpGDz=logpGDz/log(2)
+    samples$logpC <- logpC
+    samples$logpGD <- logpGD
+  }
+  return(
+    list(L=melt(apply(samples$L, c(1, 2), mean)[, 1:7])$value,
+    Z=melt(apply(samples$Z, c(1, 2), mean))$value))
 }
-
-
-c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-Nburn, EQUIV)
-logpC=logpC/log(2)
-logpGD=logpGD/log(2)
-logpGDz=logpGDz/log(2)
-samples$logpC = logpC
-samples$logpGD = logpGD
-}
-
-
-return(list(L=melt(apply(samples$L, c(1, 2), mean)[, 1:7])$value, Z=melt(apply(samples$Z, c(1, 2), mean))$value))
-}
-
 
 
 #' dirpdf
 #'
-#' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i -1 times.
-#' @param X vector of probabilities
+#' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
+#' @param K.probs vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
 #' @examples
@@ -165,7 +158,7 @@ dirpdf <- function(X, A) {
 
 #' dirlnpdf
 #'
-#' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i -1 times.
+#' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
 #' @param X vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
@@ -185,7 +178,6 @@ dirlnpdf <- function(X, A) {
 }
 
 
-
 #' poisslnpdf
 #'
 #' This function returns the log of poisson
@@ -196,8 +188,9 @@ dirlnpdf <- function(X, A) {
 #' Update here
 #'
 poisslnpdf <- function(X, L) {
-lnp = -L -lgamma(X+1) +log(L)*X
+  lnp <- -L -lgamma(X+1) +log(L)*X
 }
+
 
 #' binpdf
 #'
@@ -210,8 +203,8 @@ lnp = -L -lgamma(X+1) +log(L)*X
 #' binpdf(X, A)
 #'
 binpdf <- function(X, R, P) {
-lnp = lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
-p = exp(lnp)
+  lnp <- lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
+  p <- exp(lnp)
 }
 
 #' nbinlnpdf
@@ -225,7 +218,7 @@ p = exp(lnp)
 #' nbinlnpdf(X, R, P)
 #'
 nbinlnpdf <- function(X, R, P) {		# log(neg binomial)
-lnp = lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
+  lnp <- lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
 }
 
 #' loglikeP
@@ -240,6 +233,7 @@ lnp = lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X
 loglikeP <- function (X, L) {
   return -L - lgamma(X+1)+log(L)*X
 }
+
 
 #' draw_Z_NLM
 #'
