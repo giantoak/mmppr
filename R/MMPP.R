@@ -1,15 +1,18 @@
+#' @import expm reshape2
+NULL
+
 library(expm)
 library(reshape2)
 
 #' repmat
 #'
 #' This function replicates the matlab function repmat
-#' @param M a matrix
+#' @param X a matrix
 #' @param m new row dimension
 #' @param n new column dimension
 #' @export
-#' @examples
-#' repmat(X, m, n)
+## #' @examples
+## #' repmat(X, m, n)
 repmat <- function(X, m, n) {
   mx <- dim(X)[1]
   nx <- dim(X)[2]
@@ -19,10 +22,10 @@ repmat <- function(X, m, n) {
 #' generate.priors
 #'
 #' This function creates a list of prior parameters
-#' @param aL #lambda0, baseline rate
-#' @param bL #lambda0, baseline rate
-#' @param aD #day effect dirichlet params
-#' @param aH #time of day effect dirichlet param
+#' @param aL lambda0, baseline rate
+#' @param bL lambda0, baseline rate
+#' @param aD day effect dirichlet params
+#' @param aH time of day effect dirichlet param
 #' @param z00 event process
 #' @param z01 event process
 #' @param z10 event process
@@ -40,7 +43,7 @@ repmat <- function(X, m, n) {
 #' priors$z00 <- .99*10000   #z(t) event process
 #' priors$z01 <- .01*10000; priors$z00 <- .99*10000;     # z(t) event process
 #' priors$z10 <- .25*10000; priors$z11 <- .75*10000;
-#' priors$aE <- 5; priors$bE <- 1/3;       # gamma(t), or NBin, for event # process
+#' priors$aE <- 5; priors$bE <- 1/3;  # gamma(t), or NBin, for event # process
 #' priors$MODE <- 0;
 generate.priors <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
   prior <- list()
@@ -66,8 +69,8 @@ generate.priors <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
 #' @param ITERS  Iteration controls: total # of iterations and # used for burn-in
 #' @param EQUIV  Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
-#' @examples
-#' sensorMMPP(N, priors, c(50, 10), c(3, 3))
+## #' @examples
+## #' sensorMMPP(N, priors, c(50, 10), c(3, 3))
 sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matrix(0, nrow=48, ncol=7)+1, z00=.99*10000, z01=.01*10000, z10=.25*10000, z11=.75*10000, aE=5, bE=1/3, MODE=0), ITERS=c(50, 10), EQUIV=c(3, 3)) {
   Nt <- replace(N, N == -1, NA)
   lenN <- dim(N)[2]
@@ -75,7 +78,7 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
   priors$bL <- 1
   # priors$aD <- c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
   # priors$aH <- matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean), apply(Nt[, seq(2, lenN, 7)], 1, mean), apply(Nt[, seq(3, lenN, 7)], 1, mean), apply(Nt[, seq(4, lenN, 7)], 1, mean), apply(Nt[, seq(5, lenN, 7)], 1, mean), apply(Nt[, seq(6, lenN, 7)], 1, mean), apply(Nt[, seq(7, lenN, 7)], 1, mean)), nrow=48)
-  #priors$aD <- c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)]>-1]), mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)]>-1]), mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)]>-1]), mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)]>-1]), mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)]>-1]), mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)]>-1]), mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)]>-1]))
+  # priors$aD <- c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)]>-1]), mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)]>-1]), mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)]>-1]), mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)]>-1]), mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)]>-1]), mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)]>-1]), mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)]>-1]))
 
   Niter <- ITERS[1]
   Nburn <- ITERS[2]
@@ -135,12 +138,14 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
 
 #' dirichlet.log.pdf
 #'
-#' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
-#' @param X vector of probabilities
+#' The log of the probability density function for the Dirichlet distribution.
+#' Returns the belief that the probabilities of K rival events are x_i
+#' given that each event has been observed A_i - 1 times.
+#' @param K.probs vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
-#' @examples
-#' dirichlet.log.pdf(K.probs, A)
+## #' @examples
+## #' dirichlet.log.pdf(K.probs, A)
 dirichlet.log.pdf <- function(K.probs, A) {
   if (length(K.probs) == 1) {
     # It _seems_ like this should be 0, since ln(1) = 0. However, Graham has it as one.
@@ -152,12 +157,14 @@ dirichlet.log.pdf <- function(K.probs, A) {
 
 #' dirichlet.pdf
 #'
-#' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
+#' The probability density function for the Dirichlet distribution.
+#' Returns the belief that the probabilities of K rival events are x_i
+#' given that each event has been observed A_i - 1 times.
 #' @param K.probs vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
-#' @examples
-#' dirichlet.pdf(X, A)
+## #' @examples
+## #' dirichlet.pdf(K.probs, A)
 dirichlet.pdf <- function(K.probs, A) {
   if (length(K.probs) == 1) {
     return(1)
@@ -170,11 +177,10 @@ dirichlet.pdf <- function(K.probs, A) {
 #'
 #' This function returns the log of poisson
 #' @param X
-#' @param A
+#' @param L
 #' @export
-#' @examples
-#' Update here
-#'
+## #' @examples
+## #' poisson.log.pdf(X, L)
 poisson.log.pdf <- function(X, L) {
   return(-L -lgamma(X+1) +log(L)*X)
 }
@@ -186,8 +192,8 @@ poisson.log.pdf <- function(X, L) {
 #' @param R
 #' @param P
 #' @export
-#' @examples
-#' neg.binomial.log.pdf(X, R, P)
+## #' @examples
+## #' neg.binomial.log.pdf(X, R, P)
 #'
 neg.binomial.log.pdf <- function(X, R, P) {
   return(lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X)
@@ -200,8 +206,8 @@ neg.binomial.log.pdf <- function(X, R, P) {
 #' @param R
 #' @param P
 #' @export
-#' @examples
-#' neg.binomial.pdf(X, A)
+## #' @examples
+## #' neg.binomial.pdf(X, R, P)
 #'
 neg.binomial.pdf <- function(X, R, P) {
   return(exp(neg.binomial.log.pdf(X, R, P)))
@@ -213,8 +219,8 @@ neg.binomial.pdf <- function(X, R, P) {
 #' @param X
 #' @param L
 #' @export
-#' @examples
-#' loglikeP(X, L)
+## #' @examples
+## #' loglikeP(X, L)
 #'
 loglikeP <- function (X, L) {
   return(-L - lgamma(X+1)+log(L)*X)
@@ -228,22 +234,25 @@ loglikeP <- function (X, L) {
 #' @param M
 #' @param priors
 #' @export
-#' @examples
-#' draw_Z_NLM(N, L, M, priors)
+## #' @examples
+## #' draw_Z_NLM(N, L, M, priors)
 #'
 draw_Z_NLM <- function(N, L, M, priors) {
   N0 <- N
   NE <- 0*N
   Z <- 0*N
   ep <- 1e-50
-  ######## FIRST SAMPLE Z, N0, NE:
+  
+  # First sample Z, N0, and NE:
   PRIOR <- M%^%100%*%as.vector(c(1, 0))
   po <- matrix(0, 2, length(N))
   p  <- matrix(0, 2, length(N))
   for (t in 1:length(N)) {
     if (N[t] != -1) {
       po[1, t] <- dpois(N[t], L[t])+ep
-      po[2, t] <- sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), priors$aE, priors$bE/(1+priors$bE)))+ep
+      po[2, t] <- sum(dpois(0:N[t], L[t])*
+                        dnbinom(rev(0:N[t]), priors$aE,priors$bE/(1+priors$bE))
+                      ) + ep
     }
     else {
       po[1, t] <- 1
@@ -295,7 +304,7 @@ draw_Z_NLM <- function(N, L, M, priors) {
     }
 
     ptmp <- matrix(0, 2, 1)
-    ptmp[Z[t]+1] <- 1    # compute backward influence
+    ptmp[Z[t]+1] <- 1  # compute backward influence
     if (t>1) {
       p[, t-1] <- p[, t-1]*(t(M)%*%ptmp)
       p[, t-1] <- p[, t-1]/sum(p[, t-1])
@@ -315,8 +324,8 @@ draw_Z_NLM <- function(N, L, M, priors) {
 #' @param Z
 #' @param prior
 #' @export
-#' @examples
-#' draw_M_Z(Z, prior)
+## #' @examples
+## #' draw_M_Z(Z, prior)
 #'
 draw_M_Z <- function(Z, prior) {
   n01 <- length(which(Z[1:length(Z)-1] == 0 & Z[2:length(Z)] == 1))
@@ -336,14 +345,14 @@ draw_M_Z <- function(Z, prior) {
 #' @param prior
 #' @param EQUIV
 #' @export
-#' @examples
-#' draw_L_N0(Z, prior)
+## #' @examples
+## #' draw_L_N0(N0, prior, EQUIV)
 #'
 draw_L_N0 <- function(N0, prior, EQUIV) {
   Nd <- 7
   Nh <- dim(N0)[1]
 
-  #1st: OVERALL AVERAGE RATE
+  # First: Overall Average Rate
   if (prior$MODE) {
     L0 <- (sum(N0)+prior$aL)/(length(N0)+prior$bL)
   }
@@ -352,70 +361,72 @@ draw_L_N0 <- function(N0, prior, EQUIV) {
   }
   L <- matrix(0, dim(N0)[1], dim(N0)[2]) + L0
 
-  # 2nd: DAY EFFECT
+  # Second: Day Effect
   D <- matrix(0, 1, Nd)
   for(i in 1:length(D)) {
     alpha <- sum(N0[, seq(i, dim(N0)[2], 7)])+prior$aD[i]
     if (prior$MODE) {
-      D[i] <- (alpha-1)           #mode of Gamma(a, 1) distribution
+      D[i] <- (alpha-1)  # mode of Gamma(a, 1) distribution
     }
     else {
       D[i] <- rgamma(1, alpha, scale=1)
     }
+  }
 
-    # 3rd: TIME OF DAY EFFECT
-    A <- matrix(0, Nh, Nd)
-    for (tau in 1:(dim(A)[2])) {
-      for (i in 1:dim(A)[1]) {
-        alpha <- sum(N0[i, seq(tau, dim(N0)[2], 7)])+prior$aH[i]
-        if (prior$MODE) {
-          A[i, tau] <- (alpha-1)           # mode of Gamma(a, 1) distribution
-        }
-        else {
-          A[i, tau] <- rgamma(1, alpha, scale=1)
-        }
+  # Third: Time-of-day Effect
+  A <- matrix(0, Nh, Nd)
+  for (tau in 1:(dim(A)[2])) {
+    for (i in 1:dim(A)[1]) {
+      alpha <- sum(N0[i, seq(tau, dim(N0)[2], 7)])+prior$aH[i]
+      if (prior$MODE) {
+        A[i, tau] <- (alpha-1)  # mode of Gamma(a, 1) distribution
       }
-
-      # ENFORCE PARAMETER SHARING
-      if (EQUIV[1] == 1) {
-        D[1:7] <- 1
+      else {
+        A[i, tau] <- rgamma(1, alpha, scale=1)
       }
-      else if (EQUIV[1] == 2) {
-        D[c(1, 7)] <- mean(D[c(1, 7)])
-        D[2:6] = mean(D[2:6])
-        D = D/mean(D)
-      }
-      else if (EQUIV[1] == 3) {
-        D <- D/mean(D)
-      }
-
-      ###FIX THIS
-      # tau(t)
-      if (EQUIV[2] == 1) {
-        A[, 1:7] <- repmat(matrix(rowMeans(A)), 1, dim(A)[2])
-      }
-      else if (EQUIV[2] == 2) {
-        A[, c(1, 7)] <- repmat(matrix(rowMeans(A[, c(1, 7)])), 1, 2)
-        A[, 2:6] <- repmat(matrix(rowMeans(A[, 2:6])), 1, 5)
-      }
-      else if (EQUIV[2] == 3) {
-        A <- A
-      }
-
-      for (tau in 1:dim(A)[2]) {
-        A[, tau] = A[, tau]/mean(A[, tau])
-      }
-
-      # COMPUTE L(t)
-      for (d in 1:dim(L)[2]) {
-        for (t in 1:dim(L)[1]) {
-          dd <- (d-1)%%7+1
-          L[t, d] <- L0*D[dd]*A[t, dd] #fix this line
-        }
-      }
-
-      return(L)
     }
+  }
+
+  # Enforce parameter sharing
+  if (EQUIV[1] == 1) {
+    D[1:7] <- 1
+  }
+  else if (EQUIV[1] == 2) {
+    D[c(1, 7)] <- mean(D[c(1, 7)])
+    D[2:6] <- mean(D[2:6])
+    D <- D/mean(D)
+  }
+  else if (EQUIV[1] == 3) {
+    D <- D/mean(D)
+  }
+
+  ### FIX THIS
+  # tau(t)
+  if (EQUIV[2] == 1) {
+    A[, 1:7] <- repmat(matrix(rowMeans(A)), 1, dim(A)[2])
+  }
+  else if (EQUIV[2] == 2) {
+    A[, c(1, 7)] <- repmat(matrix(rowMeans(A[, c(1, 7)])), 1, 2)
+    A[, 2:6] <- repmat(matrix(rowMeans(A[, 2:6])), 1, 5)
+  }
+  else if (EQUIV[2] == 3) {
+    A <- A
+  }
+
+  for (tau in 1:dim(A)[2]) {
+    A[, tau] = A[, tau]/mean(A[, tau])
+  }
+
+  # Compute L(t)
+  for (d in 1:dim(L)[2]) {
+    for (t in 1:dim(L)[1]) {
+      dd <- (d-1)%%7+1
+      L[t, d] <- L0*D[dd]*A[t, dd] #fix this line
+    }
+  }
+
+  return(L)
+}
 
 #' logp
 #'
@@ -426,8 +437,8 @@ draw_L_N0 <- function(N0, prior, EQUIV) {
 #' @param iter
 #' @param EQUIV
 #' @export
-#' @examples
-#' logp(N, samples, priors, iter, EQUIV)
+## #' @examples
+## #' logp(N, samples, priors, iter, EQUIV)
 #'
 logp <- function(N, samples, priors, iter, EQUIV) {
   tmp <- samples$logp_NgLZ[1:iter]
@@ -456,8 +467,8 @@ logp <- function(N, samples, priors, iter, EQUIV) {
 #' @param Z
 #' @param prior
 #' @export
-#' @examples
-#' eval_M_Z
+## #' @examples
+## #' eval_M_Z(M, Z, prior)
 #'
 eval_M_Z <- function(M, Z, prior) {
   z1 <- M[1, 2]
@@ -475,7 +486,8 @@ eval_M_Z <- function(M, Z, prior) {
     n10 <- 0
     n1  <- 0
   }
-  logp <- log(pbeta(z0, n01+prior$z01, n0-n01+prior$z00)+.001) + log(pbeta(z1, n10+prior$z10, n1-n10+prior$z11) + .001)
+  logp <- log(pbeta(z0, n01+prior$z01, n0-n01+prior$z00) + .001) +
+          log(pbeta(z1, n10+prior$z10, n1-n10+prior$z11) + .001)
 
   return(logp)
 }
@@ -488,8 +500,8 @@ eval_M_Z <- function(M, Z, prior) {
 #' @param prior
 #' @param EQUIV
 #' @export
-#' @examples
-#' eval_N_LM
+## #' @examples
+## #' eval_L_N0(L, N0, prior, EQUIV)
 #'
 eval_L_N0 <- function(L, N0, prior, EQUIV) {
   L0 <- mean(L)
@@ -506,14 +518,15 @@ eval_L_N0 <- function(L, N0, prior, EQUIV) {
     }
   }
   logp <- 0
-  # ENFORCE PARAMETER SHARING
+  
+  # Enforce parameter sharing
   paD <- prior$aD
   aD <- matrix(0, 1, Nd)
   paH <- prior$aH
   aH <- matrix(0, Nh, Nd)
   if (length(N0) != 0) {
     for (i in 1:Nd) {
-      aD[i] <- sum(N0[, seq(i, dim(N0)[2], Nd)]) #fix this line
+      aD[i] <- sum(N0[, seq(i, dim(N0)[2], Nd)])  # Fix this line
     }
     for (i in 1:Nd) {
       for (j in 1:Nh) {
@@ -522,15 +535,16 @@ eval_L_N0 <- function(L, N0, prior, EQUIV) {
     }
   }
 
-  if (EQUIV[1] == 1) { #d(t)
+  # d(t)
+  if (EQUIV[1] == 1) {
     D <- sum(D)
     paD <- sum(paD)
     aD <- sum(aD)
   }
   else if (EQUIV[1] == 2) {
-    D <- c(D[1]+D[7], sum(D[2:6]))
-    paD <- c(paD[1]+paD[7], sum(paD[2:6]))
-    aD <- c(aD[1]+aD[7], sum(aD[2:6]))
+    D <- c(D[1] + D[7], sum(D[2:6]))
+    paD <- c(paD[1] + paD[7], sum(paD[2:6]))
+    aD <- c(aD[1] + aD[7], sum(aD[2:6]))
   }
   else if (EQUIV[1] == 3) {
     D <- D
@@ -538,15 +552,16 @@ eval_L_N0 <- function(L, N0, prior, EQUIV) {
     paH <- paH
   }
 
-  if (EQUIV[2] == 1) { # tau(t)
+  # tau(t)
+  if (EQUIV[2] == 1) {
     A <- matrix(rowSums(A)/Nd)
     aH <- matrix(rowSums(aH))
     paH <- matrix(rowSums(paH))
   }
   else if (EQUIV[2] == 2) {
-    A <- matrix(c((A[, 1]+A[, 7])/2, rowSums(A[, 2:6])/5))
-    aH <- matrix(c(aH[, 1]+aH[, 7], rowSums(aH[, 2:6])))
-    paH <- matrix(c(paH[, 1]+paH[, 7], rowSums(paH[, 2:6])), nrow=1)
+    A <- matrix(c((A[, 1] + A[, 7])/2, rowSums(A[, 2:6])/5))
+    aH <- matrix(c(aH[, 1] + aH[, 7], rowSums(aH[, 2:6])))
+    paH <- matrix(c(paH[, 1] + paH[, 7], rowSums(paH[, 2:6])), nrow=1)
   }
   else if (EQUIV[2] == 3) {
     A <- A
@@ -554,11 +569,19 @@ eval_L_N0 <- function(L, N0, prior, EQUIV) {
     paH <- paH
   }
 
-  logp <- logp + log(pgamma(L0, sum(sum(N0)+.00000001)+prior$aL, 1/(length(N0)+prior$bL))+.000000001)
-  logp <- logp + log(dirichlet.pdf(D/Nd, aD + paD)+.000000001)
+  logp <- logp + 
+          log(pgamma(L0,
+                     sum(sum(N0) + .00000001) + prior$aL,
+                     1/(length(N0)+prior$bL))
+              + .000000001)
+  logp <- logp +
+          log(dirichlet.pdf(D/Nd, aD + paD)
+              + .000000001)
 
   for (i in 1:dim(A)[2]) {
-    logp <- logp + log(dirichlet.pdf(A[, i]/Nh, aH[, i]+paH[, i])+.0000000001)
+    logp <- logp +
+            log(dirichlet.pdf(A[, i]/Nh, aH[, i]+paH[, i])
+                + .0000000001)
   }
 
   return(logp)
@@ -572,8 +595,8 @@ eval_L_N0 <- function(L, N0, prior, EQUIV) {
 #' @param M
 #' @param prior
 #' @export
-#' @examples
-#' eval_N_LM
+## #' @examples
+## #' eval_N_LM(N, L, M, prior)
 #'
 eval_N_LM <- function(N, L, M, prior) {
   PRIOR <- M%^%100%*%as.vector(c(1, 0))
@@ -613,8 +636,8 @@ eval_N_LM <- function(N, L, M, prior) {
 #' @param Z
 #' @param prior
 #' @export
-#' @examples
-#' eval_N_LZ
+## #' @examples
+## #' eval_N_LZ(N, L, Z, prior)
 #'
 eval_N_LZ <- function(N, L, Z, prior) {
   logp <- 0
@@ -635,8 +658,8 @@ eval_N_LZ <- function(N, L, Z, prior) {
 #' :=
 #'
 #' This function allows multiple assignments
-#' @param lhs
-#' @param rhs
+#' @param lhs The value to be assigned to the left-hand argument (on the left)
+#' @param rhs The value to be assigned to the right-hand argument (on the left)
 #' @export
 #' @examples
 #' c(a, b):=c(3, 4)
