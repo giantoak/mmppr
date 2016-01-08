@@ -13,7 +13,7 @@ library(reshape2)
 repmat <- function(X, m, n) {
   mx <- dim(X)[1]
   nx <- dim(X)[2]
-  matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=T)
+  return(matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=T))
 }
 
 #' priors_gen
@@ -32,12 +32,12 @@ repmat <- function(X, m, n) {
 #' @export
 #' @examples
 #' priors <- list()
-#' priors$aL=1
-#' priors$bL=1 #lambda0, baseline rate
-#' priors$aD=matrix(0, 1, 7)+5 #day effect dirichlet params
-#' priors$aH=matrix(0, nrow=48, ncol=7)+1 #time of day effect dirichlet param
-#' priors$z01=.01*10000
-#' priors$z00=.99*10000   #z(t) event process
+#' priors$aL <- 1
+#' priors$bL <- 1 #lambda0, baseline rate
+#' priors$aD <- matrix(0, 1, 7)+5 #day effect dirichlet params
+#' priors$aH <- matrix(0, nrow=48, ncol=7)+1 #time of day effect dirichlet param
+#' priors$z01 <- .01*10000
+#' priors$z00 <- .99*10000   #z(t) event process
 #' priors$z01 <- .01*10000; priors$z00 <- .99*10000;     # z(t) event process
 #' priors$z10 <- .25*10000; priors$z11 <- .75*10000;
 #' priors$aE <- 5; priors$bE <- 1/3;       # gamma(t), or NBin, for event # process
@@ -122,9 +122,9 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
     }
 
     c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-Nburn, EQUIV)
-    logpC=logpC/log(2)
-    logpGD=logpGD/log(2)
-    logpGDz=logpGDz/log(2)
+    logpC <- logpC/log(2)
+    logpGD <- logpGD/log(2)
+    logpGDz <- logpGDz/log(2)
     samples$logpC <- logpC
     samples$logpGD <- logpGD
   }
@@ -133,30 +133,27 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
     Z=melt(apply(samples$Z, c(1, 2), mean))$value))
 }
 
-
 #' dirpdf
 #'
 #' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
-#' @param K.probs vector of probabilities
+#' @param X vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
 #' @examples
 #' dirpdf(X, A)
 dirpdf <- function(K.probs, A) {
   if (length(K.probs) == 1) {
+    # It _seems_ like this should be 0, since ln(1) = 0. However, Graham has it as one.
     return(1)
   }
 
-  log.p <- sum((A-1)*log(K.probs+.0000001))-sum(lgamma(A))+lgamma(sum(A))
-  p <- exp(log.p)
-  return(p)
+  return(sum((A-1)*log(K.probs+.00000001))-sum(lgamma(A))+lgamma(sum(A)))
 }
-
 
 #' dirlnpdf
 #'
 #' The probability density function for the Dirichlet distribution.  Returns the belief that the probabilities of K rival events are x_i given that each event has been observed A_i - 1 times.
-#' @param X vector of probabilities
+#' @param K.probs vector of probabilities
 #' @param A vector of concentration parameters.
 #' @export
 #' @examples
@@ -170,7 +167,6 @@ dirlnpdf <- function(K.probs, A) {
   return(log.p)
 }
 
-
 #' poisslnpdf
 #'
 #' This function returns the log of poisson
@@ -181,13 +177,12 @@ dirlnpdf <- function(K.probs, A) {
 #' Update here
 #'
 poisslnpdf <- function(X, L) {
-  lnp <- -L -lgamma(X+1) +log(L)*X
+  return(-L -lgamma(X+1) +log(L)*X)
 }
-
 
 #' binpdf
 #'
-#' The probability density function for the negative binomial distribution.
+#' The log probability density function for the negative binomial distribution.
 #' @param X
 #' @param R
 #' @param P
@@ -224,9 +219,8 @@ nbinlnpdf <- function(X, R, P) {		# log(neg binomial)
 #' loglikeP(X, L)
 #'
 loglikeP <- function (X, L) {
-  return -L - lgamma(X+1)+log(L)*X
+  return(-L - lgamma(X+1)+log(L)*X)
 }
-
 
 #' draw_Z_NLM
 #'
@@ -426,30 +420,23 @@ return(L)
 #' logp(N, samples, priors, iter, EQUIV)
 #'
 logp <- function(N, samples, priors, iter, EQUIV) {
-
   tmp <- samples$logp_NgLZ[1:iter]
   tmpm <- mean(tmp)
-  temp <- tmp-tmpm
-  logpGDz <- log(1/mean(1/exp(tmp)))+tmpm #Gelfand-Dey estimate
-
-  tmp <- samples$logp_NgLZ[1:iter]
-  tmpm <- mean(tmp)
-  temp <- tmp-tmpm
-  logpGD <- log(1/mean(1/exp(tmp)))+tmpm #Gelfand-Dey estimate, marginalizing over Z
+  temp <- tmp - tmpm
+  logpGDz <- log(1/mean(1/exp(tmp)))+tmpm # Gelfand-Dey estimate
+  logpGD <- log(1/mean(1/exp(tmp)))+tmpm # Gelfand-Dey estimate, marginalizing over Z
 
   Lstar <- apply(samples$L, c(1, 2), mean)
   Mstar <- apply(samples$M, c(1, 2), mean)
   logp_LMgN <- matrix(0, 1, iter)
-  logp_LM <- eval_L_N0(Lstar, vector(), priors, EQUIV)+eval_M_Z(Mstar, 0, priors)
+  logp_LM <- eval_L_N0(Lstar, vector(), priors, EQUIV) + eval_M_Z(Mstar, 0, priors)
   logp_NgLM <- eval_N_LM(N, Lstar, Mstar, priors)
   for (ii in 1:iter) {
     logp_LMgN[ii] <- eval_L_N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+eval_M_Z(Mstar, samples$Z[, ,ii], priors)
   }
+
   tmpm <- mean(exp(logp_LMgN))+tmpm
-
-  logpC <- logp_NgLM+logp_LM-logp_LMgN #Chib estimate
-
-
+  logpC <- logp_NgLM + logp_LM - logp_LMgN  # Chib estimate
 }
 
 #' eval_M_Z
@@ -579,7 +566,7 @@ return(logp)
 #' @examples
 #' eval_N_LM
 #'
-eval_N_LM <- function(N, L, M, prior) { 	# evaluate p(N | L, M)
+eval_N_LM <- function(N, L, M, prior) {
   PRIOR <- M%^%100%*%as.vector(c(1, 0))
   po <- matrix(0, 2, length(N))
   p  <- matrix(0, 2, length(N))
@@ -646,15 +633,23 @@ return(logp)
 ':=' <- function(lhs, rhs) {
   frame <- parent.frame()
   lhs <- as.list(substitute(lhs))
-  if (length(lhs) > 1)
+  if (length(lhs) > 1) {
     lhs <- lhs[-1]
+  }
   if (length(lhs) == 1) {
     do.call(`=`, list(lhs[[1]], rhs), envir=frame)
-    return(invisible(NULL)) }
-  if (is.function(rhs) || is(rhs, 'formula'))
+    return(invisible(NULL))
+  }
+
+  if (is.function(rhs) || is(rhs, 'formula')) {
     rhs <- list(rhs)
-  if (length(lhs) > length(rhs))
+  }
+  if (length(lhs) > length(rhs)) {
     rhs <- c(rhs, rep(list(NULL), length(lhs) - length(rhs)))
-  for (i in 1:length(lhs))
+  }
+  for (i in 1:length(lhs)) {
     do.call(`=`, list(lhs[[i]], rhs[[i]]), envir=frame)
-  return(invisible(NULL)) }
+  }
+
+  return(invisible(NULL))
+}
