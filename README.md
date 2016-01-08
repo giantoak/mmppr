@@ -1,8 +1,8 @@
-mmppr
-=====
+**mmppr** is an R package for using Markov-Modulated Poisson Processes to detect events.
 
-R package for mmpp 
-
+If you want to download it from this repository:
+```
 devtools:install_github("mmppr", "giantoak")
+```
 
-note: events is no longer a parameter in the main sensorMMPP function.
+**NOTE:** `events` is no longer a parameter in the main sensorMMPP function.
