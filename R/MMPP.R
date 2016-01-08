@@ -142,19 +142,16 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
 #' @export
 #' @examples
 #' dirpdf(X, A)
-dirpdf <- function(X, A) {
-  k <- length(X)
-  if(k==1) {
-    p <- 1
-    return(p)
+dirpdf <- function(K.probs, A) {
+  if (length(K.probs) == 1) {
+    return(1)
   }
-  else{
-    logp=sum((A-1)*log(X+.0000001))-sum(lgamma(A))+lgamma(sum(A))
 
-  p <- exp(logp)
+  log.p <- sum((A-1)*log(K.probs+.0000001))-sum(lgamma(A))+lgamma(sum(A))
+  p <- exp(log.p)
   return(p)
 }
-  }
+
 
 #' dirlnpdf
 #'
@@ -164,17 +161,13 @@ dirpdf <- function(X, A) {
 #' @export
 #' @examples
 #' dirplndf(X, A)
-dirlnpdf <- function(X, A) {
-  k <- length(X)
-  if(k==1) {
-    p <- 1
-    return(p)
+dirlnpdf <- function(K.probs, A) {
+  if (length(K.probs) == 1) {
+    return(1)
   }
-  else{
-    logp=sum((A-1)*log(X+.00000001))-sum(lgamma(A))+lgamma(sum(A))
 
-    return(logp)
-  }
+  log.p <- sum((A-1)*log(K.probs+.00000001))-sum(lgamma(A))+lgamma(sum(A))
+  return(log.p)
 }
 
 
