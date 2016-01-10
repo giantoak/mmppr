@@ -1,4 +1,7 @@
-#' @import expm reshape2
+#' @import expm
+## #' @importFrom methods is
+#' @importFrom reshape2 melt
+#' @importFrom stats dnbinom dpois pbeta pgamma rbeta rgamma rnbinom rpois runif
 NULL
 
 library(expm)
@@ -7,10 +10,10 @@ library(reshape2)
 #' repmat
 #'
 #' This function replicates the matlab function repmat
-#' @param X a matrix
-#' @param m new row dimension
-#' @param n new column dimension
-#' @export
+#' @param X Target matrix
+#' @param m New row dimension
+#' @param n New column dimension
+## #' @export
 ## #' @examples
 ## #' repmat(X, m, n)
 repmat <- function(X, m, n) {
@@ -19,66 +22,59 @@ repmat <- function(X, m, n) {
   return(matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=T))
 }
 
-#' generate.priors
-#'
-#' This function creates a list of prior parameters
-#' @param aL lambda0, baseline rate
-#' @param bL lambda0, baseline rate
-#' @param aD day effect dirichlet params
-#' @param aH time of day effect dirichlet param
-#' @param z00 event process
-#' @param z01 event process
-#' @param z10 event process
-#' @param aE gamma process
-#' @param bE gamma process
-#' @param MODE event process
-#' @export
-#' @examples
-#' priors <- list()
-#' priors$aL <- 1
-#' priors$bL <- 1 #lambda0, baseline rate
-#' priors$aD <- matrix(0, 1, 7)+5 #day effect dirichlet params
-#' priors$aH <- matrix(0, nrow=48, ncol=7)+1 #time of day effect dirichlet param
-#' priors$z01 <- .01*10000
-#' priors$z00 <- .99*10000   #z(t) event process
-#' priors$z01 <- .01*10000; priors$z00 <- .99*10000;     # z(t) event process
-#' priors$z10 <- .25*10000; priors$z11 <- .75*10000;
-#' priors$aE <- 5; priors$bE <- 1/3;  # gamma(t), or NBin, for event # process
-#' priors$MODE <- 0;
-generate.priors <- function(aL, bL, aD, aH, z00, z01, z10, z11, aE, bE, MODE) {
-  prior <- list()
-  prior$aL <- aL
-  prior$bL <- bL
-  prior$aD <- aD
-  prior$aH <- aH
-  prior$z01 <- z01
-  prior$z00 <- z00
-  prior$z10 <- z10
-  prior$z11 <- z11
-  prior$aE <- aE
-  prior$bE <- bE
-  prior$MODE <- MODE
-  return(prior)
-}
-
 #' sensorMMPP
 #'
 #' This function provides the main MCMC inference engine
-#' @param N Matrix (Ntimes x 7*Nweeks) of count data (assumed starting Sunday) where Ntimes is the number of time intervals per day and Nweeks is the number of weeks in the data.
+#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
 #' @param priors List with parameter values of prior distributions
-#' @param ITERS  Iteration controls: total # of iterations and # used for burn-in
-#' @param EQUIV  Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @param ITERS Iteration controls: total # of iterations and # used for burn-in
+#' @param EQUIV Parameter sharing controls <- c(S1, S2):
+#' S1 <- force sharing of delta (day effect) among days,
+#' S2 <- force sharing of eta (time of day) among days,
+#' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 ## #' @examples
 ## #' sensorMMPP(N, priors, c(50, 10), c(3, 3))
-sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matrix(0, nrow=48, ncol=7)+1, z00=.99*10000, z01=.01*10000, z10=.25*10000, z11=.75*10000, aE=5, bE=1/3, MODE=0), ITERS=c(50, 10), EQUIV=c(3, 3)) {
+sensorMMPP <- function(N,
+                       priors=list(aL=1,
+                                   bL=1,
+                                   aD=matrix(0, 1, 7)+5,
+                                   aH=matrix(0, nrow=48, ncol=7)+1,
+                                   z00=.99*10000,
+                                   z01=.01*10000,
+                                   z10=.25*10000,
+                                   z11=.75*10000,
+                                   aE=5,
+                                   bE=1/3,
+                                   MODE=0),
+                       ITERS=c(50, 10),
+                       EQUIV=c(3, 3)) {
   Nt <- replace(N, N == -1, NA)
   lenN <- dim(N)[2]
   priors$aL <- mean(N[N>-1])
   priors$bL <- 1
-  # priors$aD <- c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
-  # priors$aH <- matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean), apply(Nt[, seq(2, lenN, 7)], 1, mean), apply(Nt[, seq(3, lenN, 7)], 1, mean), apply(Nt[, seq(4, lenN, 7)], 1, mean), apply(Nt[, seq(5, lenN, 7)], 1, mean), apply(Nt[, seq(6, lenN, 7)], 1, mean), apply(Nt[, seq(7, lenN, 7)], 1, mean)), nrow=48)
-  # priors$aD <- c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)]>-1]), mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)]>-1]), mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)]>-1]), mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)]>-1]), mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)]>-1]), mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)]>-1]), mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)]>-1]))
+  # priors$aD <- c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), 
+  #                mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
+  # priors$aH <- matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean),
+  #                           apply(Nt[, seq(2, lenN, 7)], 1, mean),
+  #                           apply(Nt[, seq(3, lenN, 7)], 1, mean),
+  #                           apply(Nt[, seq(4, lenN, 7)], 1, mean),
+  #                           apply(Nt[, seq(5, lenN, 7)], 1, mean),
+  #                           apply(Nt[, seq(6, lenN, 7)], 1, mean),
+  #                           apply(Nt[, seq(7, lenN, 7)], 1, mean)),
+  #                     nrow=48)
+  # priors$aD <- c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)] > -1]),
+  #                mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)] > -1]),
+  #                mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)] > -1]),
+  #                mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)] > -1]),
+  #                mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)] > -1]),
+  #                mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)] > -1]),
+  #                mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)] > -1]))
 
   Niter <- ITERS[1]
   Nburn <- ITERS[2]
@@ -110,9 +106,9 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
 
   for (iter in 1:Niter+Nburn) {
     print(iter)
-    L <- draw_L_N0(N0, priors, EQUIV)
-    c(Z, N0, NE) := draw_Z_NLM(N, L, M, priors)
-    M <- draw_M_Z(Z, priors)
+    L <- draw.L.given.N0(N0, priors, EQUIV)
+    c(Z, N0, NE) := draw.Z.given.NLM(N, L, M, priors)
+    M <- draw.M.given.Z(Z, priors)
 
     if (iter > Nburn) {
       samples$L[, ,iter-Nburn] <- L
@@ -120,8 +116,8 @@ sensorMMPP <- function(N, priors=list(aL=1, bL=1, aD=matrix(0, 1, 7)+5, aH=matri
       samples$M[, ,iter-Nburn] <- M
       samples$N0[, ,iter-Nburn] <- N0
       samples$NE[, ,iter-Nburn] <- NE
-      samples$logp_NgLM[iter-Nburn] <- eval_N_LM(N, L, M, priors)
-      samples$logp_NgLZ[iter-Nburn] <- eval_N_LZ(N, L, Z, priors)
+      samples$logp_NgLM[iter-Nburn] <- prob.N.given.LM(N, L, M, priors)
+      samples$logp_NgLZ[iter-Nburn] <- prob.N.given.LZ(N, L, Z, priors)
     }
 
     c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-Nburn, EQUIV)
@@ -160,8 +156,8 @@ dirichlet.log.pdf <- function(K.probs, A) {
 #' The probability density function for the Dirichlet distribution.
 #' Returns the belief that the probabilities of K rival events are x_i
 #' given that each event has been observed A_i - 1 times.
-#' @param K.probs vector of probabilities
-#' @param A vector of concentration parameters.
+#' @param K.probs Vector of probabilities
+#' @param A Vector of concentration parameters.
 #' @export
 ## #' @examples
 ## #' dirichlet.pdf(K.probs, A)
@@ -173,71 +169,18 @@ dirichlet.pdf <- function(K.probs, A) {
   return(exp(dirichlet.log.pdf(K.probs, A)))
 }
 
-#' poisson.log.pdf
-#'
-#' This function returns the log of poisson
-#' @param X
-#' @param L
-#' @export
-## #' @examples
-## #' poisson.log.pdf(X, L)
-poisson.log.pdf <- function(X, L) {
-  return(-L -lgamma(X+1) +log(L)*X)
-}
-
-#' neg.binomial.log.pdf
-#'
-#' The log probability density function for the negative binomial distribution.
-#' @param X
-#' @param R
-#' @param P
-#' @export
-## #' @examples
-## #' neg.binomial.log.pdf(X, R, P)
-#'
-neg.binomial.log.pdf <- function(X, R, P) {
-  return(lgamma(X+R)-lgamma(R)-lgamma(X+1)+log(P)*R+log(1-P)*X)
-}
-
-#' neg.binomial.pdf
-#'
-#' The probability density function for the negative binomial distribution.
-#' @param X
-#' @param R
-#' @param P
-#' @export
-## #' @examples
-## #' neg.binomial.pdf(X, R, P)
-#'
-neg.binomial.pdf <- function(X, R, P) {
-  return(exp(neg.binomial.log.pdf(X, R, P)))
-}
-
-#' loglikeP
-#'
-#' The log-likelihood function for the Poisson distribution
-#' @param X
-#' @param L
-#' @export
-## #' @examples
-## #' loglikeP(X, L)
-#'
-loglikeP <- function (X, L) {
-  return(-L - lgamma(X+1)+log(L)*X)
-}
-
-#' draw_Z_NLM
+#' draw.Z.given.NLM
 #'
 #' Sample the given N, L, M
-#' @param N
-#' @param L
-#' @param M
-#' @param priors
+#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
+#' @param L Matrix containing the rate functions at every time slice
+#' @param M Matrix containing the estimated transition probabilities for each iteration
+#' @param priors List with parameter values of prior distributions
 #' @export
 ## #' @examples
-## #' draw_Z_NLM(N, L, M, priors)
+## #' draw.Z.given.NLM(N, L, M, priors)
 #'
-draw_Z_NLM <- function(N, L, M, priors) {
+draw.Z.given.NLM <- function(N, L, M, priors) {
   N0 <- N
   NE <- 0*N
   Z <- 0*N
@@ -318,16 +261,16 @@ draw_Z_NLM <- function(N, L, M, priors) {
   return(out)
 }
 
-#' draw_M_Z
+#' draw.M.given.Z
 #'
 #' Sample the M given Z
-#' @param Z
-#' @param prior
+#' @param Z Binary vector indicationg the presence (1) or absence (0) of an event at every time slice
+#' @param prior Parameter values of a particular prior distribution
 #' @export
 ## #' @examples
-## #' draw_M_Z(Z, prior)
+## #' draw.M.given.Z(Z, prior)
 #'
-draw_M_Z <- function(Z, prior) {
+draw.M.given.Z <- function(Z, prior) {
   n01 <- length(which(Z[1:length(Z)-1] == 0 & Z[2:length(Z)] == 1))
   n0 <- length(which(Z[1:length(Z)-1] == 0))
   n10 <- length(which(Z[1:length(Z)-1] == 1 & Z[2:length(Z) == 0]))
@@ -338,17 +281,17 @@ draw_M_Z <- function(Z, prior) {
   return(M)
 }
 
-#' draw_L_N0
+#' draw.L.given.N0
 #'
 #' Sample the L given N0
-#' @param N0
-#' @param prior
-#' @param EQUIV
+#' @param N0 Matrix containing the estimated baseline Poisson distribution for activity 
+#' @param prior Parameter values of a particular prior distribution
+#' @param EQUIV Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 ## #' @examples
-## #' draw_L_N0(N0, prior, EQUIV)
+## #' draw.L.given.N0(N0, prior, EQUIV)
 #'
-draw_L_N0 <- function(N0, prior, EQUIV) {
+draw.L.given.N0 <- function(N0, prior, EQUIV) {
   Nd <- 7
   Nh <- dim(N0)[1]
 
@@ -431,11 +374,11 @@ draw_L_N0 <- function(N0, prior, EQUIV) {
 #' logp
 #'
 #' Estimates the marginal likelihood of the data using the samples
-#' @param N
-#' @param samples
-#' @param priors
-#' @param iter
-#' @param EQUIV
+#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
+#' @param samples List of different samples at all time periods
+#' @param priors List with parameter values of prior distributions
+#' @param iter Number of iterations over which to calcuate likelihood.
+#' @param EQUIV Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 ## #' @examples
 ## #' logp(N, samples, priors, iter, EQUIV)
@@ -444,33 +387,33 @@ logp <- function(N, samples, priors, iter, EQUIV) {
   tmp <- samples$logp_NgLZ[1:iter]
   tmpm <- mean(tmp)
   temp <- tmp - tmpm
-  logpGDz <- log(1/mean(1/exp(tmp)))+tmpm # Gelfand-Dey estimate
-  logpGD <- log(1/mean(1/exp(tmp)))+tmpm # Gelfand-Dey estimate, marginalizing over Z
+  logpGDz <- log(1/mean(1/exp(tmp))) + tmpm # Gelfand-Dey estimate
+  logpGD  <- log(1/mean(1/exp(tmp))) + tmpm # Gelfand-Dey estimate, marginalizing over Z
 
   Lstar <- apply(samples$L, c(1, 2), mean)
   Mstar <- apply(samples$M, c(1, 2), mean)
   logp_LMgN <- matrix(0, 1, iter)
-  logp_LM <- eval_L_N0(Lstar, vector(), priors, EQUIV) + eval_M_Z(Mstar, 0, priors)
-  logp_NgLM <- eval_N_LM(N, Lstar, Mstar, priors)
+  logp_LM <- prob.L.given.N0(Lstar, vector(), priors, EQUIV) + prob.M.given.Z(Mstar, 0, priors)
+  logp_NgLM <- prob.N.given.LM(N, Lstar, Mstar, priors)
   for (ii in 1:iter) {
-    logp_LMgN[ii] <- eval_L_N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+eval_M_Z(Mstar, samples$Z[, ,ii], priors)
+    logp_LMgN[ii] <- prob.L.given.N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+prob.M.given.Z(Mstar, samples$Z[, ,ii], priors)
   }
 
   tmpm <- mean(exp(logp_LMgN))+tmpm
   logpC <- logp_NgLM + logp_LM - logp_LMgN  # Chib estimate
 }
 
-#' eval_M_Z
+#' prob.M.given.Z
 #'
 #' This function evaluates p(M|Z)
-#' @param M
-#' @param Z
-#' @param prior
+#' @param M Matrix containing the estimated transition probabilities for each iteration
+#' @param Z Binary vector indicationg the presence (1) or absence (0) of an event at every time slice
+#' @param prior Parameter values of a particular prior distribution
 #' @export
 ## #' @examples
-## #' eval_M_Z(M, Z, prior)
+## #' prob.M.given.Z(M, Z, prior)
 #'
-eval_M_Z <- function(M, Z, prior) {
+prob.M.given.Z <- function(M, Z, prior) {
   z1 <- M[1, 2]
   z0 <- M[2, 1]
 
@@ -492,18 +435,18 @@ eval_M_Z <- function(M, Z, prior) {
   return(logp)
 }
 
-#' eval_L_N0
+#' prob.L.given.N0
 #'
 #' This function evaluates p(L|N0)
-#' @param L
-#' @param N0
-#' @param prior
-#' @param EQUIV
+#' @param L Matrix containing the rate functions at every time slice
+#' @param N0 Matrix containing the estimated baseline Poisson distribution for activity 
+#' @param prior Parameter values of a particular prior distribution
+#' @param EQUIV Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 ## #' @examples
-## #' eval_L_N0(L, N0, prior, EQUIV)
+## #' prob.L.given.N0(L, N0, prior, EQUIV)
 #'
-eval_L_N0 <- function(L, N0, prior, EQUIV) {
+prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
   L0 <- mean(L)
   Nd <- 7
   Nh <- dim(L)[1]
@@ -587,18 +530,18 @@ eval_L_N0 <- function(L, N0, prior, EQUIV) {
   return(logp)
 }
 
-#' eval_N_LM
+#' prob.N.given.LM
 #'
 #' This function evaluates p(N|L, M)
-#' @param N
-#' @param L
-#' @param M
-#' @param prior
+#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
+#' @param L Matrix containing the rate functions at every time slice
+#' @param M Matrix containing the estimated transition probabilities for each iteration
+#' @param prior Parameter values of a particular prior distribution
 #' @export
 ## #' @examples
-## #' eval_N_LM(N, L, M, prior)
+## #' prob.N.given.LM(N, L, M, prior)
 #'
-eval_N_LM <- function(N, L, M, prior) {
+prob.N.given.LM <- function(N, L, M, prior) {
   PRIOR <- M%^%100%*%as.vector(c(1, 0))
   po <- matrix(0, 2, length(N))
   p  <- matrix(0, 2, length(N))
@@ -628,18 +571,18 @@ eval_N_LM <- function(N, L, M, prior) {
   return(logp)
 }
 
-#' eval_N_LZ
+#' prob.N.given.LZ
 #'
 #' This function evaluates p(N|L, Z)
-#' @param N
-#' @param L
-#' @param Z
-#' @param prior
+#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
+#' @param L Matrix containing the rate functions at every time slice
+#' @param Z Binary vector indicationg the presence (1) or absence (0) of an event at every time slice
+#' @param prior Parameter values of a particular prior distribution
 #' @export
 ## #' @examples
-## #' eval_N_LZ(N, L, Z, prior)
+## #' prob.N.given.LZ(N, L, Z, prior)
 #'
-eval_N_LZ <- function(N, L, Z, prior) {
+prob.N.given.LZ <- function(N, L, Z, prior) {
   logp <- 0
   for (t in 1:length(N)) {
     if (N[t] != -1) {
