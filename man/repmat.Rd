@@ -7,11 +7,11 @@
 repmat(X, m, n)
 }
 \arguments{
-\item{X}{a matrix}
+\item{X}{Target matrix}
 
-\item{m}{new row dimension}
+\item{m}{New row dimension}
 
-\item{n}{new column dimension}
+\item{n}{New column dimension}
 }
 \description{
 This function replicates the matlab function repmat

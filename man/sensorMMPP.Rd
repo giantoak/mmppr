@@ -10,13 +10,16 @@ sensorMMPP(N, priors = list(aL = 1, bL = 1, aD = matrix(0, 1, 7) + 5, aH =
   ITERS = c(50, 10), EQUIV = c(3, 3))
 }
 \arguments{
-\item{N}{Matrix (Ntimes x 7*Nweeks) of count data (assumed starting Sunday) where Ntimes is the number of time intervals per day and Nweeks is the number of weeks in the data.}
+\item{N}{Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.}
 
 \item{priors}{List with parameter values of prior distributions}
 
 \item{ITERS}{Iteration controls: total # of iterations and # used for burn-in}
 
-\item{EQUIV}{Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)}
+\item{EQUIV}{Parameter sharing controls <- c(S1, S2):
+S1 <- force sharing of delta (day effect) among days,
+S2 <- force sharing of eta (time of day) among days,
+Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)}
 }
 \description{
 This function provides the main MCMC inference engine

@@ -6,6 +6,17 @@
 \usage{
 logp(N, samples, priors, iter, EQUIV)
 }
+\arguments{
+\item{N}{Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.}
+
+\item{samples}{List of different samples at all time periods}
+
+\item{priors}{List with parameter values of prior distributions}
+
+\item{iter}{Number of iterations over which to calcuate likelihood.}
+
+\item{EQUIV}{Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)}
+}
 \description{
 Estimates the marginal likelihood of the data using the samples
 }

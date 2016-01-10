@@ -7,9 +7,9 @@
 dirichlet.pdf(K.probs, A)
 }
 \arguments{
-\item{K.probs}{vector of probabilities}
+\item{K.probs}{Vector of probabilities}
 
-\item{A}{vector of concentration parameters.}
+\item{A}{Vector of concentration parameters.}
 }
 \description{
 The probability density function for the Dirichlet distribution.
