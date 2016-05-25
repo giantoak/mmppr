@@ -87,8 +87,8 @@ sensorMMPP <- function(N,
   L <- (N+5)/2
   M <- matrix(c(.999, .001, .5, .5), nrow=2)
   xs <- seq(0, 1, 80)
-  Nd <- 7
-  Nh <- dim(N)[1]
+  N.d <- 7
+  N.h <- dim(N)[1]
   samples <- list()
   samples$L <- vector("list", N.iter)
   samples$Z <- vector("list", N.iter)
@@ -293,8 +293,8 @@ draw.M.given.Z <- function(Z, prior) {
 ## #' draw.L.given.N0(N0, prior, EQUIV)
 #'
 draw.L.given.N0 <- function(N0, prior, EQUIV) {
-  Nd <- 7
-  Nh <- dim(N0)[1]
+  N.d <- 7
+  N.h <- dim(N0)[1]
 
   # First: Overall Average Rate
   if (prior$MODE) {
@@ -306,7 +306,7 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
   L <- matrix(0, dim(N0)[1], dim(N0)[2]) + L0
 
   # Second: Day Effect
-  D <- matrix(0, 1, Nd)
+  D <- matrix(0, 1, N.d)
   for(i in 1:length(D)) {
     alpha <- sum(N0[, seq(i, dim(N0)[2], 7)])+prior$aD[i]
     if (prior$MODE) {
@@ -318,7 +318,7 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
   }
 
   # Third: Time-of-day Effect
-  A <- matrix(0, Nh, Nd)
+  A <- matrix(0, N.h, N.d)
   for (tau in 1:(dim(A)[2])) {
     for (i in 1:dim(A)[1]) {
       alpha <- sum(N0[i, seq(tau, dim(N0)[2], 7)])+prior$aH[i]
@@ -449,15 +449,15 @@ prob.M.given.Z <- function(M, Z, prior) {
 #'
 prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
   L0 <- mean(L)
-  Nd <- 7
-  Nh <- dim(L)[1]
-  A <- matrix(0, Nh, Nd)
-  D <- rep(NA, Nd)
-  for (i in 1:Nd) {
+  N.d <- 7
+  N.h <- dim(L)[1]
+  A <- matrix(0, N.h, N.d)
+  D <- rep(NA, N.d)
+  for (i in 1:N.d) {
     D[i] <- mean(L[, i]/L0)
   }
-  for (i in 1:Nd) {
-    for (j in 1:Nh) {
+  for (i in 1:N.d) {
+    for (j in 1:N.h) {
       A[j, i] <- L[j, i]/L0/D[i]
     }
   }
@@ -465,16 +465,16 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
   
   # Enforce parameter sharing
   paD <- prior$aD
-  aD <- matrix(0, 1, Nd)
+  aD <- matrix(0, 1, N.d)
   paH <- prior$aH
-  aH <- matrix(0, Nh, Nd)
+  aH <- matrix(0, N.h, N.d)
   if (length(N0) != 0) {
-    for (i in 1:Nd) {
-      aD[i] <- sum(N0[, seq(i, dim(N0)[2], Nd)])  # Fix this line
+    for (i in 1:N.d) {
+      aD[i] <- sum(N0[, seq(i, dim(N0)[2], N.d)])  # Fix this line
     }
-    for (i in 1:Nd) {
-      for (j in 1:Nh) {
-        aH[j, i] <- sum(N0[j, seq(i, dim(N0)[2], Nd)])
+    for (i in 1:N.d) {
+      for (j in 1:N.h) {
+        aH[j, i] <- sum(N0[j, seq(i, dim(N0)[2], N.d)])
       }
     }
   }
@@ -498,7 +498,7 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
 
   # tau(t)
   if (EQUIV[2] == 1) {
-    A <- matrix(rowSums(A)/Nd)
+    A <- matrix(rowSums(A)/N.d)
     aH <- matrix(rowSums(aH))
     paH <- matrix(rowSums(paH))
   }
@@ -519,12 +519,12 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
                      1/(length(N0)+prior$bL))
               + .000000001)
   logp <- logp +
-          log(dirichlet.pdf(D/Nd, aD + paD)
+          log(dirichlet.pdf(D/N.d, aD + paD)
               + .000000001)
 
   for (i in 1:dim(A)[2]) {
     logp <- logp +
-            log(dirichlet.pdf(A[, i]/Nh, aH[, i]+paH[, i])
+            log(dirichlet.pdf(A[, i]/N.h, aH[, i]+paH[, i])
                 + .0000000001)
   }
 
