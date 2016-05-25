@@ -311,7 +311,7 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
   # Second: Day Effect
   D <- matrix(0, 1, N.d)
   for(i in 1:length(D)) {
-    alpha <- sum(N0[, seq(i, dim(N0)[2], 7)])+prior$aD[i]
+    alpha <- sum(N0[, seq.int(i, dim(N0)[2], 7)])+prior$aD[i]
     if (prior$MODE) {
       D[i] <- (alpha-1)  # mode of Gamma(a, 1) distribution
     }
@@ -324,7 +324,7 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
   A <- matrix(0, N.h, N.d)
   for (tau in 1:(dim(A)[2])) {
     for (i in 1:dim(A)[1]) {
-      alpha <- sum(N0[i, seq(tau, dim(N0)[2], 7)])+prior$aH[i]
+      alpha <- sum(N0[i, seq.int(tau, dim(N0)[2], 7)])+prior$aH[i]
       if (prior$MODE) {
         A[i, tau] <- (alpha-1)  # mode of Gamma(a, 1) distribution
       }
@@ -473,11 +473,11 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
   aH <- matrix(0, N.h, N.d)
   if (length(N0) != 0) {
     for (i in 1:N.d) {
-      aD[i] <- sum(N0[, seq(i, dim(N0)[2], N.d)])  # Fix this line
+      aD[i] <- sum(N0[, seq.int(i, dim(N0)[2], N.d)])  # Fix this line
     }
     for (i in 1:N.d) {
       for (j in 1:N.h) {
-        aH[j, i] <- sum(N0[j, seq(i, dim(N0)[2], N.d)])
+        aH[j, i] <- sum(N0[j, seq.int(i, dim(N0)[2], N.d)])
       }
     }
   }
