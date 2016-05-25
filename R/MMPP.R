@@ -6,7 +6,7 @@
 NULL
 
 library(expm)
-library(futile.logger)
+# library(futile.logger)
 library(reshape2)
 
 #' repmat
@@ -112,7 +112,7 @@ sensorMMPP <- function(N,
 
   total.iters = N.iter+N.burn
   for (iter in 1:total.iters) {
-    flog.info("MMPP Iteration %d of %d", iter, total.iters)
+    # flog.info("MMPP Iteration %d of %d", iter, total.iters)
     L <- draw.L.given.N0(N0, priors, EQUIV)
     c(Z, N0, NE) := draw.Z.given.NLM(N, L, M, priors)
     M <- draw.M.given.Z(Z, priors)
