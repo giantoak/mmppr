@@ -43,7 +43,8 @@ sensorMMPP <- function(N,
                        priors=list(aL=1,
                                    bL=1,
                                    aD=matrix(0, 1, 7)+5,
-                                   aH=matrix(0, nrow=48, ncol=7)+1,
+                                   aH=matrix(0, nrow=dim(N)[1], ncol=7)+1,
+                                   # aH=matrix(0, nrow=48, ncol=7)+1,
                                    z00=.99*10000,
                                    z01=.01*10000,
                                    z10=.25*10000,
@@ -57,28 +58,29 @@ sensorMMPP <- function(N,
   # len.N <- dim(N)[2]
   priors$aL <- mean(N[N>-1])
   priors$bL <- 1
-  # priors$aD <- c(mean(apply(Nt[, seq(1, len.N, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(2, len.N, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(3, len.N, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(4, len.N, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(5, len.N, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(6, len.N, 7)], 2, mean)), 
-  #                mean(apply(Nt[, seq(7, len.N, 7)], 2, mean)))
-  # priors$aH <- matrix(cbind(apply(Nt[, seq(1, len.N, 7)], 1, mean),
-  #                           apply(Nt[, seq(2, len.N, 7)], 1, mean),
-  #                           apply(Nt[, seq(3, len.N, 7)], 1, mean),
-  #                           apply(Nt[, seq(4, len.N, 7)], 1, mean),
-  #                           apply(Nt[, seq(5, len.N, 7)], 1, mean),
-  #                           apply(Nt[, seq(6, len.N, 7)], 1, mean),
-  #                           apply(Nt[, seq(7, len.N, 7)], 1, mean)),
+  # priors$aD <- c(mean(apply(Nt[, seq.int(1, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq.int(2, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq.int(3, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq.int(4, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq.int(5, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq.int(6, len.N, 7)], 2, mean)), 
+  #                mean(apply(Nt[, seq.int(7, len.N, 7)], 2, mean)))
+  # priors$aH <- matrix(cbind(apply(Nt[, seq.int(1, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq.int(2, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq.int(3, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq.int(4, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq.int(5, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq.int(6, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq.int(7, len.N, 7)], 1, mean)),
   #                     nrow=48)
-  # priors$aD <- c(mean(N[, seq(1, len.N, 7)][N[, seq(1, len.N, 7)] > -1]),
-  #                mean(N[, seq(2, len.N, 7)][N[, seq(2, len.N, 7)] > -1]),
-  #                mean(N[, seq(3, len.N, 7)][N[, seq(3, len.N, 7)] > -1]),
-  #                mean(N[, seq(4, len.N, 7)][N[, seq(4, len.N, 7)] > -1]),
-  #                mean(N[, seq(5, len.N, 7)][N[, seq(5, len.N, 7)] > -1]),
-  #                mean(N[, seq(6, len.N, 7)][N[, seq(6, len.N, 7)] > -1]),
-  #                mean(N[, seq(7, len.N, 7)][N[, seq(7, len.N, 7)] > -1]))
+  #                     nrow=dim(N)[1])
+  # priors$aD <- c(mean(N[, seq.int(1, len.N, 7)][N[, seq.int(1, len.N, 7)] > -1]),
+  #                mean(N[, seq.int(2, len.N, 7)][N[, seq.int(2, len.N, 7)] > -1]),
+  #                mean(N[, seq.int(3, len.N, 7)][N[, seq.int(3, len.N, 7)] > -1]),
+  #                mean(N[, seq.int(4, len.N, 7)][N[, seq.int(4, len.N, 7)] > -1]),
+  #                mean(N[, seq.int(5, len.N, 7)][N[, seq.int(5, len.N, 7)] > -1]),
+  #                mean(N[, seq.int(6, len.N, 7)][N[, seq.int(6, len.N, 7)] > -1]),
+  #                mean(N[, seq.int(7, len.N, 7)][N[, seq.int(7, len.N, 7)] > -1]))
 
   N.iter <- ITERS[1]
   N.burn <- ITERS[2]
@@ -88,8 +90,9 @@ sensorMMPP <- function(N,
   NE <- matrix(0, dim(N)[1], dim(N)[2])
   L <- (N+5)/2
   M <- matrix(c(.999, .001, .5, .5), nrow=2)
-  xs <- seq(0, 1, 80)
+  xs <- seq(0, 1, 80) # This seems off: going to just be 0. Maybe seq.int(0, 80, 1)?
   N.d <- 7
+  # N.h <- 48
   N.h <- dim(N)[1]
   samples <- list()
   samples$L <- vector("list", N.iter)
@@ -124,7 +127,18 @@ sensorMMPP <- function(N,
       samples$logp_NgLZ[iter-N.burn] <- prob.N.given.LZ(N, L, Z, priors)
     }
 
-    c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV) # is this right?
+    # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV) # is this right?
+    # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter, EQUIV) # is this right?
+    # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, max(0, iter-N.burn), EQUIV) # is this right?
+    
+    # After burn in, will overwrite used iterations
+    if (iter > N.burn) {
+        c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV)
+    }
+    else {
+        c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter, EQUIV)
+    }
+    
     logpC <- logpC/log(2)
     logpGD <- logpGD/log(2)
     logpGDz <- logpGDz/log(2)
