@@ -304,7 +304,10 @@ draw.M.given.Z <- function(Z, prior) {
 #' Sample the L given N0
 #' @param N0 Matrix containing the estimated baseline Poisson distribution for activity 
 #' @param prior Parameter values of a particular prior distribution
-#' @param EQUIV Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @param EQUIV List of parameter sharing controls <- c(S1, S2):
+#' S1 <- force sharing of delta (day effect) among days,
+#' S2 <- force sharing of eta (time of day) among days,
+#' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 ## #' @examples
 ## #' draw.L.given.N0(N0, prior, EQUIV)
@@ -396,17 +399,20 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
 #' @param samples List of different samples at all time periods
 #' @param priors List with parameter values of prior distributions
 #' @param iter Number of iterations over which to calcuate likelihood.
-#' @param EQUIV Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @param EQUIV Parameter sharing controls <- c(S1, S2): 
+#' S1 <- force sharing of delta (day effect) among days,
+#' S2 <- force sharing of eta (time of day) among days,
+#' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 ## #' @examples
 ## #' logp(N, samples, priors, iter, EQUIV)
 #'
 logp <- function(N, samples, priors, iter, EQUIV) {
   tmp <- samples$logp_NgLZ[1:iter]
-  tmpm <- mean(tmp)
-  temp <- tmp - tmpm
-  logpGDz <- log(1/mean(1/exp(tmp))) + tmpm # Gelfand-Dey estimate
-  logpGD  <- log(1/mean(1/exp(tmp))) + tmpm # Gelfand-Dey estimate, marginalizing over Z
+  tmp_mean <- mean(tmp)
+  temp <- tmp - tmp_mean
+  logpGDz <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate
+  logpGD  <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate, marginalizing over Z
 
   Lstar <- apply(samples$L, c(1, 2), mean)
   Mstar <- apply(samples$M, c(1, 2), mean)
@@ -417,7 +423,7 @@ logp <- function(N, samples, priors, iter, EQUIV) {
     logp_LMgN[ii] <- prob.L.given.N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+prob.M.given.Z(Mstar, samples$Z[, ,ii], priors)
   }
 
-  tmpm <- mean(exp(logp_LMgN))+tmpm
+  tmp_mean <- mean(exp(logp_LMgN))+tmp_mean
   logpC <- logp_NgLM + logp_LM - logp_LMgN  # Chib estimate
 }
 
