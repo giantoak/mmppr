@@ -27,8 +27,10 @@ repmat <- function(X, m, n) {
 #' This function provides the main MCMC inference engine
 #' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
 #' @param priors List with parameter values of prior distributions
-#' @param ITERS Iteration controls: total # of iterations and # used for burn-in
-#' @param EQUIV Parameter sharing controls <- c(S1, S2):
+#' @param ITERS List of iteration controls <- c(N.iter, N.burn):
+#' N.iter <- # of iterations
+#' N.burn <- # of additional burn-in iterations
+#' @param EQUIV List of parameter sharing controls <- c(S1, S2):
 #' S1 <- force sharing of delta (day effect) among days,
 #' S2 <- force sharing of eta (time of day) among days,
 #' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
@@ -49,36 +51,35 @@ sensorMMPP <- function(N,
                                    MODE=0),
                        ITERS=c(50, 10),
                        EQUIV=c(3, 3)) {
-  Nt <- replace(N, N == -1, NA)
-  lenN <- dim(N)[2]
+  # Nt <- replace(N, N == -1, NA)
+  # len.N <- dim(N)[2]
   priors$aL <- mean(N[N>-1])
   priors$bL <- 1
-  # priors$aD <- c(mean(apply(Nt[, seq(1, lenN, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(2, lenN, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(3, lenN, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(4, lenN, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(5, lenN, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq(6, lenN, 7)], 2, mean)), 
-  #                mean(apply(Nt[, seq(7, lenN, 7)], 2, mean)))
-  # priors$aH <- matrix(cbind(apply(Nt[, seq(1, lenN, 7)], 1, mean),
-  #                           apply(Nt[, seq(2, lenN, 7)], 1, mean),
-  #                           apply(Nt[, seq(3, lenN, 7)], 1, mean),
-  #                           apply(Nt[, seq(4, lenN, 7)], 1, mean),
-  #                           apply(Nt[, seq(5, lenN, 7)], 1, mean),
-  #                           apply(Nt[, seq(6, lenN, 7)], 1, mean),
-  #                           apply(Nt[, seq(7, lenN, 7)], 1, mean)),
+  # priors$aD <- c(mean(apply(Nt[, seq(1, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(2, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(3, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(4, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(5, len.N, 7)], 2, mean)),
+  #                mean(apply(Nt[, seq(6, len.N, 7)], 2, mean)), 
+  #                mean(apply(Nt[, seq(7, len.N, 7)], 2, mean)))
+  # priors$aH <- matrix(cbind(apply(Nt[, seq(1, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq(2, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq(3, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq(4, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq(5, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq(6, len.N, 7)], 1, mean),
+  #                           apply(Nt[, seq(7, len.N, 7)], 1, mean)),
   #                     nrow=48)
-  # priors$aD <- c(mean(N[, seq(1, lenN, 7)][N[, seq(1, lenN, 7)] > -1]),
-  #                mean(N[, seq(2, lenN, 7)][N[, seq(2, lenN, 7)] > -1]),
-  #                mean(N[, seq(3, lenN, 7)][N[, seq(3, lenN, 7)] > -1]),
-  #                mean(N[, seq(4, lenN, 7)][N[, seq(4, lenN, 7)] > -1]),
-  #                mean(N[, seq(5, lenN, 7)][N[, seq(5, lenN, 7)] > -1]),
-  #                mean(N[, seq(6, lenN, 7)][N[, seq(6, lenN, 7)] > -1]),
-  #                mean(N[, seq(7, lenN, 7)][N[, seq(7, lenN, 7)] > -1]))
+  # priors$aD <- c(mean(N[, seq(1, len.N, 7)][N[, seq(1, len.N, 7)] > -1]),
+  #                mean(N[, seq(2, len.N, 7)][N[, seq(2, len.N, 7)] > -1]),
+  #                mean(N[, seq(3, len.N, 7)][N[, seq(3, len.N, 7)] > -1]),
+  #                mean(N[, seq(4, len.N, 7)][N[, seq(4, len.N, 7)] > -1]),
+  #                mean(N[, seq(5, len.N, 7)][N[, seq(5, len.N, 7)] > -1]),
+  #                mean(N[, seq(6, len.N, 7)][N[, seq(6, len.N, 7)] > -1]),
+  #                mean(N[, seq(7, len.N, 7)][N[, seq(7, len.N, 7)] > -1]))
 
-  Niter <- ITERS[1]
-  Nburn <- ITERS[2]
-  Nplot <- ITERS[3]
+  N.iter <- ITERS[1]
+  N.burn <- ITERS[2]
 
   Z <- matrix(0, dim(N)[1], dim(N)[2])
   N0 <- pmax(N, 1)
@@ -89,38 +90,38 @@ sensorMMPP <- function(N,
   Nd <- 7
   Nh <- dim(N)[1]
   samples <- list()
-  samples$L <- vector("list", Niter)
-  samples$Z <- vector("list", Niter)
-  samples$M <- vector("list", Niter)
-  samples$N0 <- vector("list", Niter)
-  samples$NE <- vector("list", Niter)
-  samples$logp_NgLM <- vector("list", Niter)
-  samples$logp_NgLZ <- vector("list", Niter)
-  samples$L <- array(0, dim=c(dim(L)[1], dim(L)[2], Niter))
-  samples$Z <- array(0, dim=c(dim(Z)[1], dim(Z)[2], Niter))
-  samples$M <- array(0, dim=c(dim(M)[1], dim(M)[2], Niter))
-  samples$N0 <- array(0, dim=c(dim(N0)[1], dim(N0)[2], Niter))
-  samples$NE <- array(0, dim=c(dim(NE)[1], dim(NE)[2], Niter))
+  samples$L <- vector("list", N.iter)
+  samples$Z <- vector("list", N.iter)
+  samples$M <- vector("list", N.iter)
+  samples$N0 <- vector("list", N.iter)
+  samples$NE <- vector("list", N.iter)
+  samples$logp_NgLM <- vector("list", N.iter)
+  samples$logp_NgLZ <- vector("list", N.iter)
+  samples$L <- array(0, dim=c(dim(L)[1], dim(L)[2], N.iter))
+  samples$Z <- array(0, dim=c(dim(Z)[1], dim(Z)[2], N.iter))
+  samples$M <- array(0, dim=c(dim(M)[1], dim(M)[2], N.iter))
+  samples$N0 <- array(0, dim=c(dim(N0)[1], dim(N0)[2], N.iter))
+  samples$NE <- array(0, dim=c(dim(NE)[1], dim(NE)[2], N.iter))
   samples$logp_NgLM <- matrix(0, 1, 50)
   samples$logp_NgLZ <- matrix(0, 1, 50)
 
-  for (iter in 1:Niter+Nburn) {
-    print(iter)
+  total.iters = N.iter+N.burn
+  for (iter in 1:total.iters) {
     L <- draw.L.given.N0(N0, priors, EQUIV)
     c(Z, N0, NE) := draw.Z.given.NLM(N, L, M, priors)
     M <- draw.M.given.Z(Z, priors)
 
-    if (iter > Nburn) {
-      samples$L[, ,iter-Nburn] <- L
-      samples$Z[, ,iter-Nburn] <- Z
-      samples$M[, ,iter-Nburn] <- M
-      samples$N0[, ,iter-Nburn] <- N0
-      samples$NE[, ,iter-Nburn] <- NE
-      samples$logp_NgLM[iter-Nburn] <- prob.N.given.LM(N, L, M, priors)
-      samples$logp_NgLZ[iter-Nburn] <- prob.N.given.LZ(N, L, Z, priors)
+    if (iter > N.burn) {
+      samples$L[, ,iter-N.burn] <- L
+      samples$Z[, ,iter-N.burn] <- Z
+      samples$M[, ,iter-N.burn] <- M
+      samples$N0[, ,iter-N.burn] <- N0
+      samples$NE[, ,iter-N.burn] <- NE
+      samples$logp_NgLM[iter-N.burn] <- prob.N.given.LM(N, L, M, priors)
+      samples$logp_NgLZ[iter-N.burn] <- prob.N.given.LZ(N, L, Z, priors)
     }
 
-    c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-Nburn, EQUIV)
+    c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV) # is this right?
     logpC <- logpC/log(2)
     logpGD <- logpGD/log(2)
     logpGDz <- logpGDz/log(2)
@@ -129,7 +130,7 @@ sensorMMPP <- function(N,
   }
   return(
     list(L=melt(apply(samples$L, c(1, 2), mean)[, 1:7])$value,
-    Z=melt(apply(samples$Z, c(1, 2), mean))$value))
+         Z=melt(apply(samples$Z, c(1, 2), mean))$value))
 }
 
 #' dirichlet.log.pdf
