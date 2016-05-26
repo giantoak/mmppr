@@ -27,8 +27,20 @@ repmat <- function(X, m, n) {
 #' sensorMMPP
 #'
 #' This function provides the main MCMC inference engine
-#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
-#' @param priors List with parameter values of prior distributions
+#' @param N Matrix of count data, grouped by weekday; axis 0 is the number of time intervals per day and axis 1 is the number of weekdays (7).
+#' (N rows, 7 columns)
+#' @param priors List with parameter values of prior distributions;
+#' aL = ,
+#' bL = ,
+#' aD = 1 x 7 matrix of row means (hard set to 5),
+#' aH = 48 x 7 matrix of column means (hard set to 1),
+#' z00 = ,
+#' z01 = ,
+#' z10 = ,
+#' z11 = ,
+#' aE = ,
+#' bE = ,
+#' MODE = 
 #' @param ITERS List of iteration controls <- c(N.iter, N.burn):
 #' N.iter <- # of iterations
 #' N.burn <- # of additional burn-in iterations
