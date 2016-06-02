@@ -2,7 +2,7 @@
 
 If you want to download it from this repository, run this command in R:
 ```
-devtools:install_github("mmppr", "giantoak")
+devtools:install_github("giantoak/mmppr")
 ```
 
 If you want to download it from [CRAN,](https://cran.r-project.org/web/packages/mmppr/index.html) run this command in R:
