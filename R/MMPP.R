@@ -40,7 +40,7 @@ repmat <- function(X, m, n) {
 #' z11 = ,
 #' aE = ,
 #' bE = ,
-#' MODE = 
+#' MODE =
 #' @param ITERS List of iteration controls <- c(N.iter, N.burn):
 #' N.iter <- # of iterations
 #' N.burn <- # of additional burn-in iterations
@@ -75,7 +75,7 @@ sensorMMPP <- function(N,
   #                mean(apply(Nt[, seq.int(3, len.N, 7)], 2, mean)),
   #                mean(apply(Nt[, seq.int(4, len.N, 7)], 2, mean)),
   #                mean(apply(Nt[, seq.int(5, len.N, 7)], 2, mean)),
-  #                mean(apply(Nt[, seq.int(6, len.N, 7)], 2, mean)), 
+  #                mean(apply(Nt[, seq.int(6, len.N, 7)], 2, mean)),
   #                mean(apply(Nt[, seq.int(7, len.N, 7)], 2, mean)))
   # priors$aH <- matrix(cbind(apply(Nt[, seq.int(1, len.N, 7)], 1, mean),
   #                           apply(Nt[, seq.int(2, len.N, 7)], 1, mean),
@@ -102,7 +102,6 @@ sensorMMPP <- function(N,
   NE <- matrix(0, dim(N)[1], dim(N)[2])
   L <- (N+5)/2
   M <- matrix(c(.999, .001, .5, .5), nrow=2)
-  xs <- seq(0, 1, 80) # This seems off: going to just be 0. Maybe seq.int(0, 80, 1)?
   N.d <- 7
   # N.h <- 48
   N.h <- dim(N)[1]
@@ -142,7 +141,7 @@ sensorMMPP <- function(N,
     # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV) # is this right?
     # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter, EQUIV) # is this right?
     # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, max(0, iter-N.burn), EQUIV) # is this right?
-    
+
     # After burn in, will overwrite used iterations
     if (iter > N.burn) {
         c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV)
@@ -150,7 +149,7 @@ sensorMMPP <- function(N,
     else {
         c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter, EQUIV)
     }
-    
+
     logpC <- logpC/log(2)
     logpGD <- logpGD/log(2)
     logpGDz <- logpGDz/log(2)
@@ -215,7 +214,7 @@ draw.Z.given.NLM <- function(N, L, M, priors) {
   NE <- 0*N
   Z <- 0*N
   ep <- 1e-50
-  
+
   # First sample Z, N0, and NE:
   PRIOR <- M%^%100%*%as.vector(c(1, 0))
   po <- matrix(0, 2, length(N))
@@ -314,7 +313,7 @@ draw.M.given.Z <- function(Z, prior) {
 #' draw.L.given.N0
 #'
 #' Sample the L given N0
-#' @param N0 Matrix containing the estimated baseline Poisson distribution for activity 
+#' @param N0 Matrix containing the estimated baseline Poisson distribution for activity
 #' @param prior Parameter values of a particular prior distribution
 #' @param EQUIV List of parameter sharing controls <- c(S1, S2):
 #' S1 <- force sharing of delta (day effect) among days,
@@ -411,7 +410,7 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
 #' @param samples List of different samples at all time periods
 #' @param priors List with parameter values of prior distributions
 #' @param iter Number of iterations over which to calcuate likelihood.
-#' @param EQUIV Parameter sharing controls <- c(S1, S2): 
+#' @param EQUIV Parameter sharing controls <- c(S1, S2):
 #' S1 <- force sharing of delta (day effect) among days,
 #' S2 <- force sharing of eta (time of day) among days,
 #' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
@@ -475,7 +474,7 @@ prob.M.given.Z <- function(M, Z, prior) {
 #'
 #' This function evaluates p(L|N0)
 #' @param L Matrix containing the rate functions at every time slice
-#' @param N0 Matrix containing the estimated baseline Poisson distribution for activity 
+#' @param N0 Matrix containing the estimated baseline Poisson distribution for activity
 #' @param prior Parameter values of a particular prior distribution
 #' @param EQUIV Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
@@ -497,7 +496,7 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
     }
   }
   logp <- 0
-  
+
   # Enforce parameter sharing
   paD <- prior$aD
   aD <- matrix(0, 1, N.d)
@@ -548,7 +547,7 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
     paH <- paH
   }
 
-  logp <- logp + 
+  logp <- logp +
           log(pgamma(L0,
                      sum(sum(N0) + .00000001) + prior$aL,
                      1/(length(N0)+prior$bL))
