@@ -577,33 +577,32 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
 ## #' prob.N.given.LM(N, L, M, prior)
 #'
 prob.N.given.LM <- function(N, L, M, prior) {
-  PRIOR <- M%^%100%*%as.vector(c(1, 0))
-  po <- matrix(0, 2, length(N))
-  p  <- matrix(0, 2, length(N))
-
-  for (t in 1:length(N)) {
-    if (N[t] != -1) {
-      po[1, t] <- dpois(N[t], L[t])
-      po[2, t] <- sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), prior$aE, prior$bE/(1+prior$bE)))
+    PRIOR <- M%^%100%*%as.vector(c(1, 0))
+    po <- matrix(0, 2, length(N))
+    p  <- matrix(0, 2, length(N))
+    
+    for (t in 1:length(N)) {
+        if (N[t] != -1) {
+            po[1, t] <- dpois(N[t], L[t])
+            po[2, t] <- sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), prior$aE, prior$bE/(1+prior$bE)))
+        }
+        else {
+            po[1, t] <- 1
+            po[2, t] <- 1
+        }
     }
-    else {
-      po[1, t] <- 1
-      po[2, t] <- 1
+    p[, 1] <- PRIOR*po[, 1]
+    sp <- sum(p[, 1])
+    logp <- log(sp)
+    p[, 1] <- p[, 1]/sp
+    for (t in 2:length(N)) {
+        p[, t] <- (M%*%p[, t-1])*po[, t]
+        sp <- sum(p[, t])
+        logp <- logp + log(sp)
+        p[, t] <- p[, t]/sp
     }
-  }
-
-  p[, 1] <- PRIOR*po[, 1]
-  sp <- sum(p[, 1])
-  logp <- log(sp)
-  p[, 1] <- p[, 1]/sp
-  for (t in 2:length(N)) {
-    p[, t] <- (M%*%p[, t-1])*po[, t]
-    sp <- sum(p[, t])
-    logp <- logp + log(sp)
-    p[, t] <- p[, t]/sp
-  }
-
-  return(logp)
+    
+    return(logp)
 }
 
 #' prob.N.given.LZ
