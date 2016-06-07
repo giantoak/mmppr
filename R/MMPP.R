@@ -618,18 +618,17 @@ prob.N.given.LM <- function(N, L, M, prior) {
 ## #' prob.N.given.LZ(N, L, Z, prior)
 #'
 prob.N.given.LZ <- function(N, L, Z, prior) {
-  logp <- 0
-  for (t in 1:length(N)) {
-    if (N[t] != -1) {
-      if (Z[t] == 0) {
-        logp <- logp + log(dpois(N[t], L[t]))
-      }
-      else {
-        logp <- logp + log(sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), prior$aE, prior$bE/(1+prior$bE))))
-      }
+    logp <- 0
+    for (t in 1:length(N)) {
+        if (N[t] != -1) {
+            if (Z[t] == 0) {
+                logp <- logp + log(dpois(N[t], L[t]))
+            }
+            else {
+                logp <- logp + log(sum(dpois(0:N[t], L[t])*dnbinom(rev(0:N[t]), prior$aE, prior$bE/(1+prior$bE))))
+            }
+        }
     }
-  }
-
   return(logp)
 }
 
@@ -643,25 +642,24 @@ prob.N.given.LZ <- function(N, L, Z, prior) {
 #' c(a, b):=c(3, 4)
 #'
 ':=' <- function(lhs, rhs) {
-  frame <- parent.frame()
-  lhs <- as.list(substitute(lhs))
-  if (length(lhs) > 1) {
-    lhs <- lhs[-1]
-  }
-  if (length(lhs) == 1) {
-    do.call(`=`, list(lhs[[1]], rhs), envir=frame)
+    frame <- parent.frame()
+    lhs <- as.list(substitute(lhs))
+    if (length(lhs) > 1) {
+        lhs <- lhs[-1]
+    }
+    if (length(lhs) == 1) {
+        do.call(`=`, list(lhs[[1]], rhs), envir=frame)
+        return(invisible(NULL))
+    }
+    
+    if (is.function(rhs) || is(rhs, 'formula')) {
+        rhs <- list(rhs)
+    }
+    if (length(lhs) > length(rhs)) {
+        rhs <- c(rhs, rep(list(NULL), length(lhs) - length(rhs)))
+    }
+    for (i in 1:length(lhs)) {
+        do.call(`=`, list(lhs[[i]], rhs[[i]]), envir=frame)
+    }
     return(invisible(NULL))
-  }
-
-  if (is.function(rhs) || is(rhs, 'formula')) {
-    rhs <- list(rhs)
-  }
-  if (length(lhs) > length(rhs)) {
-    rhs <- c(rhs, rep(list(NULL), length(lhs) - length(rhs)))
-  }
-  for (i in 1:length(lhs)) {
-    do.call(`=`, list(lhs[[i]], rhs[[i]]), envir=frame)
-  }
-
-  return(invisible(NULL))
 }
