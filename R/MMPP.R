@@ -121,8 +121,8 @@ sensorMMPP <- function(N,
   samples$M <- array(0, dim=c(dim(M)[1], dim(M)[2], N.iter))
   samples$N0 <- array(0, dim=c(dim(N0)[1], dim(N0)[2], N.iter))
   samples$NE <- array(0, dim=c(dim(NE)[1], dim(NE)[2], N.iter))
-  samples$logp_NgLM <- matrix(0, 1, 50)
-  samples$logp_NgLZ <- matrix(0, 1, 50)
+  samples$logp_NgLM <- matrix(0, 1, N.iter)
+  samples$logp_NgLZ <- matrix(0, 1, N.iter)
 
   total.iters = N.iter+N.burn
   for (iter in 1:total.iters) {
