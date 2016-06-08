@@ -175,12 +175,12 @@ sensorMMPP <- function(N,
 ## #' @examples
 ## #' dirichlet.log.pdf(K.probs, A)
 dirichlet.log.pdf <- function(K.probs, A) {
-  if (length(K.probs) == 1) {
-    # It _seems_ like this should be 0, since ln(1) = 0. However, Graham has it as one.
-    return(1)
-  }
-
-  return(sum((A-1)*log(K.probs+.00000001))-sum(lgamma(A))+lgamma(sum(A)))
+    if (length(K.probs) == 1) {
+        # It _seems_ like this should be 0, since ln(1) = 0. However, Graham has it as one.
+        return(1)
+    }
+    
+    return(sum((A-1)*log(K.probs+.00000001))-sum(lgamma(A))+lgamma(sum(A)))
 }
 
 #' dirichlet.pdf
@@ -194,11 +194,10 @@ dirichlet.log.pdf <- function(K.probs, A) {
 ## #' @examples
 ## #' dirichlet.pdf(K.probs, A)
 dirichlet.pdf <- function(K.probs, A) {
-  if (length(K.probs) == 1) {
-    return(1)
-  }
-
-  return(exp(dirichlet.log.pdf(K.probs, A)))
+    if (length(K.probs) == 1) {
+        return(1)
+    }
+    return(exp(dirichlet.log.pdf(K.probs, A)))
 }
 
 #' draw.Z.given.NLM
