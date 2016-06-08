@@ -27,13 +27,13 @@ repmat <- function(X, m, n) {
 #' sensorMMPP
 #'
 #' This function provides the main MCMC inference engine
-#' @param N Matrix of count data, grouped by weekday; axis 0 is the number of time intervals per day and axis 1 is the number of weekdays (7).
-#' (N rows, 7 columns)
+#' @param N Matrix of count data, grouped by weekday; axis 0 is the number of time intervals per period and axis 1 is the number of periods.
+#' (N rows, M columns)
 #' @param priors List with parameter values of prior distributions;
 #' aL = ,
 #' bL = ,
-#' aD = 1 x 7 matrix of row means (hard set to 5),
-#' aH = 48 x 7 matrix of column means (hard set to 1),
+#' aD = 1 x N matrix of row means (hard set to 5),
+#' aH = N x M matrix of column means (hard set to 1),
 #' z00 = ,
 #' z01 = ,
 #' z10 = ,
@@ -96,15 +96,18 @@ sensorMMPP <- function(N,
 
   N.iter <- ITERS[1]
   N.burn <- ITERS[2]
+  
+  N.h <- dim(N)[1]
+  N.d <- dim(N)[2]
+  # N.h <- 48
+  # N.d <- 7
 
-  Z <- matrix(0, dim(N)[1], dim(N)[2])
+  Z <- matrix(0, N.h, N.d)
   N0 <- pmax(N, 1)
-  NE <- matrix(0, dim(N)[1], dim(N)[2])
+  NE <- matrix(0, N.h, N.d)
   L <- (N+5)/2
   M <- matrix(c(.999, .001, .5, .5), nrow=2)
-  N.d <- 7
-  # N.h <- 48
-  N.h <- dim(N)[1]
+
   samples <- list()
   samples$L <- vector("list", N.iter)
   samples$Z <- vector("list", N.iter)
@@ -157,7 +160,7 @@ sensorMMPP <- function(N,
     samples$logpGD <- logpGD
   }
   return(
-    list(L=melt(apply(samples$L, c(1, 2), mean)[, 1:7])$value,
+    list(L=melt(apply(samples$L, c(1, 2), mean)[, 1:N.d])$value,
          Z=melt(apply(samples$Z, c(1, 2), mean))$value))
 }
 
