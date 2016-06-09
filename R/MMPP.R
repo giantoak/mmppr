@@ -493,8 +493,11 @@ prob.M.given.Z <- function(M, Z, prior) {
 # prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
 prob.L.given.N0 <- function(L, N0, prior, EQUIV_ONE, EQUIV_TWO) {
   L0 <- mean(L)
-  N.d <- 7
+  
+  N.d <- dim(L)[2]
+  # N.d <- 7
   N.h <- dim(L)[1]
+  
   A <- matrix(0, N.h, N.d)
   D <- rep(NA, N.d)
   for (i in 1:N.d) {
