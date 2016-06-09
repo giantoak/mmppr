@@ -334,24 +334,41 @@ draw.L.given.N0 <- function(N0, prior, EQUIV_ONE, EQUIV_TWO) {
     
     # First: Overall Average Rate
     if (prior$MODE) {
-      D[i] <- (alpha-1)  # mode of Gamma(a, 1) distribution
+        L0 <- (sum(N0)+prior$aL)/(length(N0)+prior$bL)
     }
     else {
-      D[i] <- rgamma(1, alpha, scale=1)
+        L0 <- rgamma(1, shape=sum(N0)+prior$aL, scale=1/(length(N0)+prior$bL))
     }
-  }
-
-  # Third: Time-of-day Effect
-  A <- matrix(0, N.h, N.d)
-  for (tau in 1:(dim(A)[2])) {
-    for (i in 1:dim(A)[1]) {
-      alpha <- sum(N0[i, seq.int(tau, dim(N0)[2], 7)])+prior$aH[i]
-      if (prior$MODE) {
-        A[i, tau] <- (alpha-1)  # mode of Gamma(a, 1) distribution
-      }
-      else {
-        A[i, tau] <- rgamma(1, alpha, scale=1)
-      }
+    L <- matrix(0, N.h, N.d) + L0
+    
+    # Second: Day Effect
+    D <- matrix(0, 1, N.d)
+    for(i in 1:length(D)) {
+        # seq.int val seem kind of weird - should maybe be some other chunking?
+        alpha <- sum(N0[, seq.int(i, N.d, N.d)])+prior$aD[i]
+        if (prior$MODE) {
+            D[i] <- (alpha-1)  # mode of Gamma(a, 1) distribution
+        }
+        else {
+            D[i] <- rgamma(1, alpha, scale=1)
+        }
+    }
+    
+    # Third: Time-of-day Effect
+    A <- matrix(0, N.h, N.d)
+    for (tau in 1:(dim(A)[2])) {
+        for (i in 1:dim(A)[1]) {
+            # seq.int val seem kind of weird - should maybe be some other chunking?
+            alpha <- sum(N0[i, seq.int(tau, N.d, N.d)])+prior$aH[i]
+            if (prior$MODE) {
+                A[i, tau] <- (alpha-1)  # mode of Gamma(a, 1) distribution
+            }
+            else {
+                A[i, tau] <- rgamma(1, alpha, scale=1)
+            }
+        }
+    }
+    
     # Enforce parameter sharing
     if (!is.null(EQUIV_ONE) && length(EQUIV_ONE) > 0) {
         for (i in 1:length(EQUIV_ONE))
