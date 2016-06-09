@@ -44,10 +44,8 @@ repmat <- function(X, m, n) {
 #' @param ITERS List of iteration controls <- c(N.iter, N.burn):
 #' N.iter <- # of iterations
 #' N.burn <- # of additional burn-in iterations
-#' @param EQUIV List of parameter sharing controls <- c(S1, S2):
-#' S1 <- force sharing of delta (day effect) among days,
-#' S2 <- force sharing of eta (time of day) among days,
-#' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
+#' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
 #' @export
 ## #' @examples
 ## #' sensorMMPP(N, priors, c(50, 10), c(3, 3))
@@ -65,6 +63,8 @@ sensorMMPP <- function(N,
                                    bE=1/3,
                                    MODE=0),
                        ITERS=c(50, 10),
+                       EQUIV_ONE = list(),
+                       EQUIV_TWO = list(),
                        EQUIV=c(3, 3)) {
   # Nt <- replace(N, N == -1, NA)
   # len.N <- dim(N)[2]
@@ -127,7 +127,8 @@ sensorMMPP <- function(N,
   total.iters = N.iter+N.burn
   for (iter in 1:total.iters) {
     # flog.info("MMPP Iteration %d of %d", iter, total.iters)
-    L <- draw.L.given.N0(N0, priors, EQUIV)
+    # L <- draw.L.given.N0(N0, priors, EQUIV)
+    L <- draw.L.given.N0(N0, priors, EQUIV_ONE, EQUIV_TWO)
     c(Z, N0, NE) := draw.Z.given.NLM(N, L, M, priors)
     M <- draw.M.given.Z(Z, priors)
 
@@ -147,10 +148,12 @@ sensorMMPP <- function(N,
 
     # After burn in, will overwrite used iterations
     if (iter > N.burn) {
-        c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV)
+        # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV)
+        c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter-N.burn, EQUIV_ONE, EQUIV_TWO)
     }
     else {
-        c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter, EQUIV)
+        # c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter, EQUIV)
+        c(logpC, logpGD, logpGDz) := logp(N, samples, priors, iter, EQUIV_ONE, EQUIV_TWO)
     }
 
     logpC <- logpC/log(2)
@@ -317,31 +320,19 @@ draw.M.given.Z <- function(Z, prior) {
 #' Sample the L given N0
 #' @param N0 Matrix containing the estimated baseline Poisson distribution for activity
 #' @param prior Parameter values of a particular prior distribution
-#' @param EQUIV List of parameter sharing controls <- c(S1, S2):
-#' S1 <- force sharing of delta (day effect) among days,
-#' S2 <- force sharing of eta (time of day) among days,
-#' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
+#' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
 #' @export
 ## #' @examples
 ## #' draw.L.given.N0(N0, prior, EQUIV)
 #'
-draw.L.given.N0 <- function(N0, prior, EQUIV) {
-  N.d <- 7
-  N.h <- dim(N0)[1]
-
-  # First: Overall Average Rate
-  if (prior$MODE) {
-    L0 <- (sum(N0)+prior$aL)/(length(N0)+prior$bL)
-  }
-  else {
-    L0 <- rgamma(1, shape=sum(N0)+prior$aL, scale=1/(length(N0)+prior$bL))
-  }
-  L <- matrix(0, dim(N0)[1], dim(N0)[2]) + L0
-
-  # Second: Day Effect
-  D <- matrix(0, 1, N.d)
-  for(i in 1:length(D)) {
-    alpha <- sum(N0[, seq.int(i, dim(N0)[2], 7)])+prior$aD[i]
+# draw.L.given.N0 <- function(N0, prior, EQUIV) {
+draw.L.given.N0 <- function(N0, prior, EQUIV_ONE, EQUIV_TWO) {
+    N.h <- dim(N0)[1]
+    N.d <- din(N0)[2]
+    # N.d <- 7
+    
+    # First: Overall Average Rate
     if (prior$MODE) {
       D[i] <- (alpha-1)  # mode of Gamma(a, 1) distribution
     }
@@ -361,48 +352,61 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
       else {
         A[i, tau] <- rgamma(1, alpha, scale=1)
       }
+    # Enforce parameter sharing
+    if (!is.null(EQUIV_ONE) && length(EQUIV_ONE) > 0) {
+        for (i in 1:length(EQUIV_ONE))
+            D[EQUIV_ONE[[i]]] <- mean(D[EQUIV_ONE[[i]]])
     }
-  }
-
-  # Enforce parameter sharing
-  if (EQUIV[1] == 1) {
-    D[1:7] <- 1
-  }
-  else if (EQUIV[1] == 2) {
-    D[c(1, 7)] <- mean(D[c(1, 7)])
-    D[2:6] <- mean(D[2:6])
     D <- D/mean(D)
-  }
-  else if (EQUIV[1] == 3) {
-    D <- D/mean(D)
-  }
-
-  ### FIX THIS
-  # tau(t)
-  if (EQUIV[2] == 1) {
-    A[, 1:7] <- repmat(matrix(rowMeans(A)), 1, dim(A)[2])
-  }
-  else if (EQUIV[2] == 2) {
-    A[, c(1, 7)] <- repmat(matrix(rowMeans(A[, c(1, 7)])), 1, 2)
-    A[, 2:6] <- repmat(matrix(rowMeans(A[, 2:6])), 1, 5)
-  }
-  else if (EQUIV[2] == 3) {
-    A <- A
-  }
-
-  for (tau in 1:dim(A)[2]) {
-    A[, tau] = A[, tau]/mean(A[, tau])
-  }
-
-  # Compute L(t)
-  for (d in 1:dim(L)[2]) {
-    for (t in 1:dim(L)[1]) {
-      dd <- (d-1)%%7+1
-      L[t, d] <- L0*D[dd]*A[t, dd] #fix this line
+    
+    # if (EQUIV[1] == 1) {
+    #     D[1:N.d] <- 1 # one for all days is essentially the mean of means (mean(D) / mean(D))
+    # }
+    # else if (EQUIV[1] == 2) {
+    #     D[c(1, 7)] <- mean(D[c(1, 7)])
+    #     D[2:6] <- mean(D[2:6])
+    #     D <- D/mean(D)
+    # }
+    # else if (EQUIV[1] == 3) {
+    #     D <- D/mean(D)
+    # }
+    
+    ### FIX THIS
+    # tau(t)
+    if (!is.null(EQUIV_TWO) && length(EQUIV_TWO) > 0) {
+        for (i in 1:length(EQUIV_TWO)) {
+            A[, EQUIV_TWO[[i]]] <- repmat(matrix(rowMeans(A[, EQUIV_TWO[[i]]])),
+                                          1,
+                                          length(EQUIV_TWO[[i]]))
+        }
     }
-  }
-
-  return(L)
+    
+    # if (EQUIV[2] == 1) {
+    #     A[, 1:7] <- repmat(matrix(rowMeans(A)), 1, dim(A)[2])
+    # }
+    # else if (EQUIV[2] == 2) {
+    #     A[, c(1, 7)] <- repmat(matrix(rowMeans(A[, c(1, 7)])), 1, 2)
+    #     A[, 2:6] <- repmat(matrix(rowMeans(A[, 2:6])), 1, 5)
+    # }
+    # else if (EQUIV[2] == 3) {
+    #     A <- A
+    # }
+    
+    A <- apply(A, c(2), mean.of.colMean <- function(x){x/mean(x)})
+    # for (tau in 1:dim(A)[2]) {
+    #     A[, tau] = A[, tau]/mean(A[, tau])
+    # }
+    
+    # Compute L(t)
+    
+    for (d in 1:dim(L)[2]) {
+        dd <- (d-1)%%7+1
+        for (t in 1:dim(L)[1]) {
+            L[t, d] <- L0*D[dd]*A[t, dd] # fix this line
+        }
+    }
+    
+    return(L)
 }
 
 #' logp
@@ -412,32 +416,34 @@ draw.L.given.N0 <- function(N0, prior, EQUIV) {
 #' @param samples List of different samples at all time periods
 #' @param priors List with parameter values of prior distributions
 #' @param iter Number of iterations over which to calcuate likelihood.
-#' @param EQUIV Parameter sharing controls <- c(S1, S2):
-#' S1 <- force sharing of delta (day effect) among days,
-#' S2 <- force sharing of eta (time of day) among days,
+#' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
+#' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
 #' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
 #' @export
 ## #' @examples
 ## #' logp(N, samples, priors, iter, EQUIV)
 #'
-logp <- function(N, samples, priors, iter, EQUIV) {
-  tmp <- samples$logp_NgLZ[1:iter]
-  tmp_mean <- mean(tmp)
-  temp <- tmp - tmp_mean
-  logpGDz <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate
-  logpGD  <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate, marginalizing over Z
-
-  Lstar <- apply(samples$L, c(1, 2), mean)
-  Mstar <- apply(samples$M, c(1, 2), mean)
-  logp_LMgN <- matrix(0, 1, iter)
-  logp_LM <- prob.L.given.N0(Lstar, vector(), priors, EQUIV) + prob.M.given.Z(Mstar, 0, priors)
-  logp_NgLM <- prob.N.given.LM(N, Lstar, Mstar, priors)
-  for (ii in 1:iter) {
-    logp_LMgN[ii] <- prob.L.given.N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+prob.M.given.Z(Mstar, samples$Z[, ,ii], priors)
-  }
-
-  tmp_mean <- mean(exp(logp_LMgN))+tmp_mean
-  logpC <- logp_NgLM + logp_LM - logp_LMgN  # Chib estimate
+# logp <- function(N, samples, priors, iter, EQUIV) {
+logp <- function(N, samples, priors, iter, EQUIV_ONE, EQUIV_TWO) {
+    tmp <- samples$logp_NgLZ[1:iter]
+    tmp_mean <- mean(tmp)
+    temp <- tmp - tmp_mean
+    logpGDz <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate
+    logpGD  <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate, marginalizing over Z
+    
+    Lstar <- apply(samples$L, c(1, 2), mean)
+    Mstar <- apply(samples$M, c(1, 2), mean)
+    logp_LMgN <- matrix(0, 1, iter)
+    # logp_LM <- prob.L.given.N0(Lstar, vector(), priors, EQUIV) + prob.M.given.Z(Mstar, 0, priors)
+    logp_LM <- prob.L.given.N0(Lstar, vector(), priors, EQUIV_ONE, EQUIV_TWO) + prob.M.given.Z(Mstar, 0, priors)
+    logp_NgLM <- prob.N.given.LM(N, Lstar, Mstar, priors)
+    for (ii in 1:iter) {
+        logp_LMgN[ii] <- prob.L.given.N0(Lstar, samples$N0[, ,ii], priors, EQUIV_ONE, EQUIV_TWO)+prob.M.given.Z(Mstar, samples$Z[, ,ii], priors)
+        # logp_LMgN[ii] <- prob.L.given.N0(Lstar, samples$N0[, ,ii], priors, EQUIV)+prob.M.given.Z(Mstar, samples$Z[, ,ii], priors)
+    }
+    
+    tmp_mean <- mean(exp(logp_LMgN))+tmp_mean
+    logpC <- logp_NgLM + logp_LM - logp_LMgN  # Chib estimate
 }
 
 #' prob.M.given.Z
@@ -478,12 +484,14 @@ prob.M.given.Z <- function(M, Z, prior) {
 #' @param L Matrix containing the rate functions at every time slice
 #' @param N0 Matrix containing the estimated baseline Poisson distribution for activity
 #' @param prior Parameter values of a particular prior distribution
-#' @param EQUIV Parameter sharing controls <- c(S1, S2):  S1 <- force sharing of delta (day effect) among days, S2 <- force sharing of eta (time of day) among days, Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
+#' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
 #' @export
 ## #' @examples
 ## #' prob.L.given.N0(L, N0, prior, EQUIV)
 #'
-prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
+# prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
+prob.L.given.N0 <- function(L, N0, prior, EQUIV_ONE, EQUIV_TWO) {
   L0 <- mean(L)
   N.d <- 7
   N.h <- dim(L)[1]
@@ -516,38 +524,66 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
   }
 
   # d(t)
-  if (EQUIV[1] == 1) {
-    D <- sum(D)
-    paD <- sum(paD)
-    aD <- sum(aD)
+  if (!is.null(EQUIV_ONE) && length(EQUIV_ONE) > 0) {
+      new.D <- c()
+      new.paD <- c()
+      new.aD <- c()
+      for (i in 1:length(EQUIV_ONE)) {
+          new.D <- c(new.D, sum(D[EQUIV_ONE[[i]]]))
+          new.paD <- c(new.paD, sum(paD[EQUIV_ONE[[i]]]))
+          new.aD <- c(new.aD, sum(aD[EQUIV_ONE[[i]]]))
+      }
+      D <- new.D
+      paD <- new.paD
+      aD <- new.aD
   }
-  else if (EQUIV[1] == 2) {
-    D <- c(D[1] + D[7], sum(D[2:6]))
-    paD <- c(paD[1] + paD[7], sum(paD[2:6]))
-    aD <- c(aD[1] + aD[7], sum(aD[2:6]))
-  }
-  else if (EQUIV[1] == 3) {
-    D <- D
-    paD <- paD
-    paH <- paH
-  }
+  
+  # if (EQUIV[1] == 1) {
+    #  D <- sum(D)
+    #  paD <- sum(paD)
+    #  aD <- sum(aD)
+  # }
+  # else if (EQUIV[1] == 2) {
+    #  D <- c(D[1] + D[7], sum(D[2:6]))
+    #  paD <- c(paD[1] + paD[7], sum(paD[2:6]))
+    #  aD <- c(aD[1] + aD[7], sum(aD[2:6]))
+  # }
+  # else if (EQUIV[1] == 3) {
+    #  D <- D
+    #  paD <- paD
+    #  paH <- paH
+  # }
 
   # tau(t)
-  if (EQUIV[2] == 1) {
-    A <- matrix(rowSums(A)/N.d)
-    aH <- matrix(rowSums(aH))
-    paH <- matrix(rowSums(paH))
+  if (!is.null(EQUIV_TWO) && length(EQUIV_TWO) > 0) {
+      new.A <- c()
+      new.aH <- c()
+      new.paH <- c()
+      for (i in 1:length(EQUIV_TWO)) {
+          new.A <- c(new.A, rowSums(A[EQUIV_TWO[[i]]])/len(EQUIV_TWO[[i]]))
+          new.aH <- c(new.aH, rowSums(aH[EQUIV_TWO[[i]]])/len(EQUIV_TWO[[i]]))
+          new.paH <- c(new.paH, rowSums(paH[EQUIV_TWO[[i]]])/len(EQUIV_TWO[[i]]))
+      }
+      A <- matrix(new.A)
+      aH <- matrix(new.aH)
+      paH <- matrix(new.paH)
   }
-  else if (EQUIV[2] == 2) {
-    A <- matrix(c((A[, 1] + A[, 7])/2, rowSums(A[, 2:6])/5))
-    aH <- matrix(c(aH[, 1] + aH[, 7], rowSums(aH[, 2:6])))
-    paH <- matrix(c(paH[, 1] + paH[, 7], rowSums(paH[, 2:6])), nrow=1)
-  }
-  else if (EQUIV[2] == 3) {
-    A <- A
-    aH <- aH
-    paH <- paH
-  }
+  
+  # if (EQUIV[2] == 1) {
+    #  A <- matrix(rowSums(A)/N.d)
+    #  aH <- matrix(rowSums(aH))
+    #  paH <- matrix(rowSums(paH))
+ # }
+ # else if (EQUIV[2] == 2) {
+    #  A <- matrix(c((A[, 1] + A[, 7])/2, rowSums(A[, 2:6])/5))
+    #  aH <- matrix(c(aH[, 1] + aH[, 7], rowSums(aH[, 2:6])))
+    #  paH <- matrix(c(paH[, 1] + paH[, 7], rowSums(paH[, 2:6])), nrow=1)
+ # }
+ # else if (EQUIV[2] == 3) {
+    #  A <- A
+    #  aH <- aH
+    #  paH <- paH
+ # }
 
   logp <- logp +
           log(pgamma(L0,
