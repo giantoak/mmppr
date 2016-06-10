@@ -441,8 +441,8 @@ logp <- function(N, samples, priors, iter, EQUIV_ONE, EQUIV_TWO) {
     logpGDz <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate
     logpGD  <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate, marginalizing over Z
     
-    Lstar <- apply(samples$L, c(1, 2), mean)
-    Mstar <- apply(samples$M, c(1, 2), mean)
+    Lstar <- apply(samples$L, c(1, 2), mean) # Takes the mean *across iterations*
+    Mstar <- apply(samples$M, c(1, 2), mean) # Takes the mean *across iterations*
     logp_LMgN <- matrix(0, 1, iter)
     # logp_LM <- prob.L.given.N0(Lstar, vector(), priors, EQUIV) + prob.M.given.Z(Mstar, 0, priors)
     logp_LM <- prob.L.given.N0(Lstar, vector(), priors, EQUIV_ONE, EQUIV_TWO) + prob.M.given.Z(Mstar, 0, priors)
