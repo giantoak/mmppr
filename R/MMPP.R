@@ -437,7 +437,6 @@ draw.L.given.N0 <- function(N0, prior, EQUIV_ONE, EQUIV_TWO) {
 logp <- function(N, samples, priors, iter, EQUIV_ONE, EQUIV_TWO) {
     tmp <- samples$logp_NgLZ[1:iter]
     tmp_mean <- mean(tmp)
-    temp <- tmp - tmp_mean
     logpGDz <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate
     logpGD  <- log(1/mean(1/exp(tmp))) + tmp_mean # Gelfand-Dey estimate, marginalizing over Z
     
