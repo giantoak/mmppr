@@ -109,13 +109,6 @@ sensorMMPP <- function(N,
   M <- matrix(c(.999, .001, .5, .5), nrow=2)
 
   samples <- list()
-  samples$L <- vector("list", N.iter)
-  samples$Z <- vector("list", N.iter)
-  samples$M <- vector("list", N.iter)
-  samples$N0 <- vector("list", N.iter)
-  samples$NE <- vector("list", N.iter)
-  samples$logp_NgLM <- vector("list", N.iter)
-  samples$logp_NgLZ <- vector("list", N.iter)
   samples$L <- array(0, dim=c(dim(L)[1], dim(L)[2], N.iter))
   samples$Z <- array(0, dim=c(dim(Z)[1], dim(Z)[2], N.iter))
   samples$M <- array(0, dim=c(dim(M)[1], dim(M)[2], N.iter))
