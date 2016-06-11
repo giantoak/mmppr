@@ -15,19 +15,22 @@ library(reshape2)
 #' @param X Target matrix
 #' @param m New row dimension
 #' @param n New column dimension
+#' @return Copy of X, replicated out to fit the new dimensions
 ## #' @export
 ## #' @examples
 ## #' repmat(X, m, n)
 repmat <- function(X, m, n) {
     mx <- dim(X)[1]
     nx <- dim(X)[2]
-    return(matrix(t(matrix(X, mx, nx*n)), mx*m, nx*n, byrow=T))
+    return(matrix(t(matrix(X, mx, nx*n)),
+                  mx*m, nx*n, byrow=T))
 }
 
 #' sensorMMPP
 #'
 #' This function provides the main MCMC inference engine
-#' @param N Matrix of count data, grouped by weekday; axis 0 is the number of time intervals per period and axis 1 is the number of periods.
+#' @param N Matrix of count data grouped by aribtary, regular intervals and periods.
+#' axis 0 is the number of time intervals per period and axis 1 is the number of periods.
 #' (N rows, M columns)
 #' @param priors List with parameter values of prior distributions;
 #' aL = ,
@@ -42,10 +45,13 @@ repmat <- function(X, m, n) {
 #' bE = ,
 #' MODE =
 #' @param ITERS List of iteration controls <- c(N.iter, N.burn):
-#' N.iter <- # of iterations
-#' N.burn <- # of additional burn-in iterations
+#' N.iter <- Number of iterations
+#' N.burn <- Number of additional burn-in iterations
 #' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
 #' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
+#' @return List of data frames:
+#' L = the value of lambda at each time slice, averaged across iterations
+#' Z = the number of events generated at each time slice, averaged across iterations
 #' @export
 ## #' @examples
 ## #' sensorMMPP(N, priors, c(50, 10), c(3, 3))
@@ -155,18 +161,19 @@ sensorMMPP <- function(N,
     samples$logpC <- logpC
     samples$logpGD <- logpGD
   }
-  return(
-    list(L=melt(apply(samples$L, c(1, 2), mean)[, 1:N.d])$value,
-         Z=melt(apply(samples$Z, c(1, 2), mean))$value))
+  return(list(
+      L=melt(apply(samples$L, c(1, 2), mean)[, 1:N.d])$value,
+      Z=melt(apply(samples$Z, c(1, 2), mean))$value
+  ))
 }
 
 #' dirichlet.log.pdf
 #'
 #' The log of the probability density function for the Dirichlet distribution.
-#' Returns the belief that the probabilities of K rival events are x_i
+#' @param K.probs Vector of probabilities
+#' @param A Vector of concentration parameters
+#' @return  The belief that the probabilities of K rival events are x_i
 #' given that each event has been observed A_i - 1 times.
-#' @param K.probs vector of probabilities
-#' @param A vector of concentration parameters.
 #' @export
 ## #' @examples
 ## #' dirichlet.log.pdf(K.probs, A)
@@ -182,10 +189,10 @@ dirichlet.log.pdf <- function(K.probs, A) {
 #' dirichlet.pdf
 #'
 #' The probability density function for the Dirichlet distribution.
-#' Returns the belief that the probabilities of K rival events are x_i
-#' given that each event has been observed A_i - 1 times.
 #' @param K.probs Vector of probabilities
 #' @param A Vector of concentration parameters.
+#' @return The belief that the probabilities of K rival events are x_i
+#' given that each event has been observed A_i - 1 times.
 #' @export
 ## #' @examples
 ## #' dirichlet.pdf(K.probs, A)
@@ -198,11 +205,16 @@ dirichlet.pdf <- function(K.probs, A) {
 
 #' draw.Z.given.NLM
 #'
-#' Sample the given N, L, M
-#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
+#' Sample Z given N, L, M
+#' @param N Matrix of count data grouped by aribtary, regular intervals and periods.
+#' axis 0 is the number of time intervals per period and axis 1 is the number of periods.
 #' @param L Matrix containing the rate functions at every time slice
 #' @param M Matrix containing the estimated transition probabilities for each iteration
 #' @param priors List with parameter values of prior distributions
+#' @return List of lists:
+#' Z = ,
+#' N0 = ,
+#' NE = 
 #' @export
 ## #' @examples
 ## #' draw.Z.given.NLM(N, L, M, priors)
@@ -290,9 +302,11 @@ draw.Z.given.NLM <- function(N, L, M, priors) {
 
 #' draw.M.given.Z
 #'
-#' Sample the M given Z
-#' @param Z Binary vector indicationg the presence (1) or absence (0) of an event at every time slice
+#' Draw a sample M given Z
+#' @param Z Binary vector indicationg the presence (1) or absence (0) of an event
+#' at every time slice
 #' @param prior Parameter values of a particular prior distribution
+#' @return Matrix containing the estimated transition probabilities for each iteration
 #' @export
 ## #' @examples
 ## #' draw.M.given.Z(Z, prior)
@@ -310,14 +324,15 @@ draw.M.given.Z <- function(Z, prior) {
 
 #' draw.L.given.N0
 #'
-#' Sample the L given N0
+#' Draw a sample L given N0
 #' @param N0 Matrix containing the estimated baseline Poisson distribution for activity
 #' @param prior Parameter values of a particular prior distribution
 #' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
 #' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
+#' @return Matrix containing the rate functions at every time slice
 #' @export
 ## #' @examples
-## #' draw.L.given.N0(N0, prior, EQUIV)
+## #' draw.L.given.N0(N0, prior, EQUIV_ONE, EQUIV_TWO)
 #'
 # draw.L.given.N0 <- function(N0, prior, EQUIV) {
 draw.L.given.N0 <- function(N0, prior, EQUIV_ONE, EQUIV_TWO) {
@@ -422,16 +437,17 @@ draw.L.given.N0 <- function(N0, prior, EQUIV_ONE, EQUIV_TWO) {
 #' logp
 #'
 #' Estimates the marginal likelihood of the data using the samples
-#' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
+#' @param N Matrix of count data grouped by aribtary, regular intervals and periods.
+#' axis 0 is the number of time intervals per period and axis 1 is the number of periods.
 #' @param samples List of different samples at all time periods
 #' @param priors List with parameter values of prior distributions
 #' @param iter Number of iterations over which to calcuate likelihood.
 #' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
 #' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
-#' Values: 1 (all days share), 2 (weekdays/weekends), 3 (none)
+#' @return Numeric
 #' @export
 ## #' @examples
-## #' logp(N, samples, priors, iter, EQUIV)
+## #' logp(N, samples, priors, iter, EQUIV_ONE, EQUIV_TWO)
 #'
 # logp <- function(N, samples, priors, iter, EQUIV) {
 logp <- function(N, samples, priors, iter, EQUIV_ONE, EQUIV_TWO) {
@@ -457,10 +473,12 @@ logp <- function(N, samples, priors, iter, EQUIV_ONE, EQUIV_TWO) {
 
 #' prob.M.given.Z
 #'
-#' This function evaluates p(M|Z)
+#' This function evaluates \eqn{p(M|Z)}
 #' @param M Matrix containing the estimated transition probabilities for each iteration
-#' @param Z Binary vector indicationg the presence (1) or absence (0) of an event at every time slice
+#' @param Z Binary vector indicationg the presence (1) or absence (0) of an event
+#' at every time slice
 #' @param prior Parameter values of a particular prior distribution
+#' @return \eqn{p(M|Z)}, a Numeric
 #' @export
 ## #' @examples
 ## #' prob.M.given.Z(M, Z, prior)
@@ -489,15 +507,16 @@ prob.M.given.Z <- function(M, Z, prior) {
 
 #' prob.L.given.N0
 #'
-#' This function evaluates p(L|N0)
+#' This function evaluates \eqn{p(L|N0)}
 #' @param L Matrix containing the rate functions at every time slice
 #' @param N0 Matrix containing the estimated baseline Poisson distribution for activity
 #' @param prior Parameter values of a particular prior distribution
 #' @param EQUIV_ONE List of lists of columns that should share parameters (can be empty)
 #' @param EQUIV_TWO List of lists of rows that should share parameters (can be empty)
+#' @return \eqn{p(L|N0)}, a Numeric
 #' @export
 ## #' @examples
-## #' prob.L.given.N0(L, N0, prior, EQUIV)
+## #' prob.L.given.N0(L, N0, prior, EQUIV_ONE, EQUIV_TWO)
 #'
 # prob.L.given.N0 <- function(L, N0, prior, EQUIV) {
 prob.L.given.N0 <- function(L, N0, prior, EQUIV_ONE, EQUIV_TWO) {
@@ -617,11 +636,12 @@ prob.L.given.N0 <- function(L, N0, prior, EQUIV_ONE, EQUIV_TWO) {
 
 #' prob.N.given.LM
 #'
-#' This function evaluates p(N|L, M)
+#' This function evaluates \eqn{p(N|L, M)}
 #' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
 #' @param L Matrix containing the rate functions at every time slice
 #' @param M Matrix containing the estimated transition probabilities for each iteration
 #' @param prior Parameter values of a particular prior distribution
+#' @return \eqn{p(N|L, M)}, a Numeric
 #' @export
 ## #' @examples
 ## #' prob.N.given.LM(N, L, M, prior)
@@ -657,11 +677,12 @@ prob.N.given.LM <- function(N, L, M, prior) {
 
 #' prob.N.given.LZ
 #'
-#' This function evaluates p(N|L, Z)
+#' This function evaluates \eqn{p(N|L, Z)}
 #' @param N Matrix of count data; axis 0 is the number of time intervals per day and axis 1 is the number of days in the data.
 #' @param L Matrix containing the rate functions at every time slice
 #' @param Z Binary vector indicationg the presence (1) or absence (0) of an event at every time slice
 #' @param prior Parameter values of a particular prior distribution
+#' @return \eqn{p(N|L, Z)}, a Numeric
 #' @export
 ## #' @examples
 ## #' prob.N.given.LZ(N, L, Z, prior)
